@@ -17,6 +17,11 @@ data Not a
 
 data IsEven
 data IsNonZero -- etc
+data Minimum a
+data Maximum a
+data MaxLength a
+data MinLength a
+
 
 data ErrorTree e
   = Leaf e

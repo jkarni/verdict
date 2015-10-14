@@ -23,6 +23,8 @@ library
                      , Verdict.Val
   extensions:          TypeOperators
                      , MultiParamTypeClasses
+                     , FunctionalDependencies
+                     , PolyKinds
                      , ScopedTypeVariables
                      , FlexibleInstances
                      , FlexibleContexts

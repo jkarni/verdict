@@ -40,11 +40,11 @@ instance (Eq i, Num i) => HaskVerdict IsNonZero i where
     haskVerdict _ = check (/= 0) "Should be non-zero"
 
 instance (Ord b, Show b, KnownVal a b) => HaskVerdict (Maximum a) b where
-    haskVerdict _ = check (< p) ("Should be less than " ++ show p)
+    haskVerdict _ = check (<= p) ("Should be less than " ++ show p)
       where p = knownVal (Proxy :: Proxy a)
 
 instance (Ord b, Show b, KnownVal a b) => HaskVerdict (Minimum a) b where
-    haskVerdict _ = check (> p) ("Should be more than " ++ show p)
+    haskVerdict _ = check (>= p) ("Should be more than " ++ show p)
       where p = knownVal (Proxy :: Proxy a)
 
 instance (Foldable t, KnownNat a) => HaskVerdict (Length a) (t b) where

@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveFunctor #-}
 module Verdict.Types where
 
 
@@ -17,9 +18,8 @@ data Not a
 data IsEven
 data IsNonZero -- etc
 
-newtype Fix f a = Fix { unFix :: f (Fix f a) }
-
 data ErrorTree e
   = Leaf e
   | Or (ErrorTree e) (ErrorTree e)
   | And (ErrorTree e) (ErrorTree e)
+  deriving (Eq, Show, Functor)

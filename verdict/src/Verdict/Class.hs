@@ -3,6 +3,7 @@ module Verdict.Class where
 import Control.Applicative
 import Data.Proxy
 import Data.Monoid
+import GHC.TypeLits
 import Control.Monad
 import Verdict.Types
 
@@ -45,6 +46,10 @@ instance (Ord b, Show b, KnownVal a b) => HaskVerdict (Maximum a) b where
 instance (Ord b, Show b, KnownVal a b) => HaskVerdict (Minimum a) b where
     haskVerdict _ = check (> p) ("Should be more than " ++ show p)
       where p = knownVal (Proxy :: Proxy a)
+
+instance (Foldable t, KnownNat a) => HaskVerdict (Length a) (t b) where
+    haskVerdict _ = check ((== p) . length) ("Should be of length " ++ show p)
+      where p = fromInteger $ natVal (Proxy :: Proxy a)
 
 check :: (x -> Bool) -> err -> x -> Maybe (ErrorTree err)
 check pred err x = guard (not $ pred x) >> pure (Leaf err)

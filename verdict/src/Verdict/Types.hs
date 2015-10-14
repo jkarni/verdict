@@ -21,6 +21,7 @@ data Minimum a
 data Maximum a
 data MaxLength a
 data MinLength a
+data Length a
 
 
 data ErrorTree e

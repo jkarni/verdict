@@ -1,0 +1,6 @@
+resolver: lts-3.7
+packages:
+- 'verdict'
+extra-deps: []
+flags: {}
+extra-package-dbs: []

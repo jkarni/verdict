@@ -1,3 +1,4 @@
+{-# LANGUAGE ConstraintKinds #-}
 module Verdict.Val where
 
 import Data.Proxy
@@ -13,7 +14,7 @@ import Verdict.Logic
 -- The validated constructor is not exported
 newtype Validated constraint a = Validated { getVal :: a } deriving (Show, Eq)
 
-val :: forall c a . HaskVerdict c a => a -> Either Errors (Validated c a)
+val :: forall c a . HaskVerdict c a => a -> Either (ErrorTree String) (Validated c a)
 val a = case haskVerdict (Proxy :: Proxy c) a of
     Nothing -> Right $ Validated a
     Just err -> Left err

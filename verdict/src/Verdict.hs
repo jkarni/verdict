@@ -1,3 +1,4 @@
+{-# LANGUAGE ConstraintKinds #-}
 module Verdict ( HaskVerdict(..)
                , val
                , getVal
@@ -7,7 +8,7 @@ module Verdict ( HaskVerdict(..)
                , (:&&)
                , (:||)
                , IsEven
-               , Errors
+               , ErrorTree(..)
                , IsNonZero
                )  where
 

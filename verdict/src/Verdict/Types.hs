@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveFunctor #-}
 module Verdict.Types where
 
 
@@ -8,6 +9,7 @@ data a :&& b = a :&& b
 infixr 3 :&&
 data a :|| b = a :|| b
 infixr 2 :||
+data Not a
 
 ------------------------------------------------------------------------------
 -- * Other Base Terms
@@ -16,4 +18,8 @@ infixr 2 :||
 data IsEven
 data IsNonZero -- etc
 
-type Errors = [String]
+data ErrorTree e
+  = Leaf e
+  | Or (ErrorTree e) (ErrorTree e)
+  | And (ErrorTree e) (ErrorTree e)
+  deriving (Eq, Show, Functor)

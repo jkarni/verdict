@@ -1,6 +1,7 @@
 resolver: lts-3.7
 packages:
 - 'verdict'
+- 'verdict-json'
 extra-deps: []
 flags: {}
 extra-package-dbs: []

@@ -18,11 +18,22 @@ cabal-version:       >=1.10
 library
   exposed-modules:     Verdict.JSON
   ghc-options:         -Wall
-  -- other-modules:
-  -- other-extensions:
+  other-modules:       Verdict.JSON.Class
+                     , Verdict.JSON.Types
+  extensions:          DeriveFunctor
+                     , TypeOperators
+                     , MultiParamTypeClasses
+                     , DataKinds
+                     , FunctionalDependencies
+                     , PolyKinds
+                     , ScopedTypeVariables
+                     , FlexibleInstances
+                     , FlexibleContexts
+                     , TypeFamilies
   build-depends:       base >=4.8 && <4.9
                      , aeson
                      , verdict
+                     , text
   hs-source-dirs:      src
   default-language:    Haskell2010
 

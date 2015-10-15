@@ -7,3 +7,4 @@ data JsonConstraint a
     | MinLength Int
     | OtherError a
     deriving (Eq, Show, Read, Functor)
+

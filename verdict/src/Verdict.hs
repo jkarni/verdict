@@ -11,6 +11,7 @@ module Verdict ( HaskVerdict(..)
                , ErrorTree(..)
                , IsNonZero
                , unsafeCoerceVal
+               , check
                )  where
 
 import Verdict.Class

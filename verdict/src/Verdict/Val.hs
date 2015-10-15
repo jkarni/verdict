@@ -15,7 +15,8 @@ import Verdict.Logic
 -- * Val
 ------------------------------------------------------------------------------
 -- The validated constructor is not exported
-newtype Validated constraint a = Validated { getVal :: a } deriving (Show, Eq)
+newtype Validated constraint a = Validated { getVal :: a }
+    deriving (Show, Eq, Ord)
 
 instance (HaskVerdict c v, Read v) => Read (Validated c v) where
     readPrec = force . val <$> readPrec

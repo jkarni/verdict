@@ -8,4 +8,4 @@ class JsonVerdict a where
     jsonVerdict :: proxy a -> JsonConstraint Text.Text
 
 class JsonSchema a where
-    jsonVerdict :: proxy a -> Map.Map JSONKey
+    jsonSchema :: proxy a -> Spec

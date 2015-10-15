@@ -3,6 +3,9 @@ module Verdict.Val where
 
 import Data.Proxy
 import Data.Coerce
+import Control.Arrow (first)
+import Control.Monad.Error.Class
+import Text.Read
 
 import Verdict.Class
 import Verdict.Types
@@ -14,10 +17,21 @@ import Verdict.Logic
 -- The validated constructor is not exported
 newtype Validated constraint a = Validated { getVal :: a } deriving (Show, Eq)
 
-val :: forall c a . HaskVerdict c a => a -> Either (ErrorTree String) (Validated c a)
+instance (HaskVerdict c v, Read v) => Read (Validated c v) where
+    readPrec = force . val <$> readPrec
+      where force = either (error . show) id
+
+val :: forall c a m . (HaskVerdict c a, MonadError (ErrorTree String) m)
+    => a -> m (Validated c a)
 val a = case haskVerdict (Proxy :: Proxy c) a of
-    Nothing -> Right $ Validated a
-    Just err -> Left err
+    Nothing -> return $ Validated a
+    Just err -> throwError err
+
+-- | Coerce a 'Validated' to another set of constraints. This is safe with
+-- respect to memory corruption, but loses the guarantee that the values
+-- satisfy the predicates.
+unsafeCoerceVal :: Validated c a -> Validated c' a
+unsafeCoerceVal = coerce
 
 -- | Function composition. Typechecks if the result of applying the first
 -- function has a constraint that implies the constraint of the argument of the

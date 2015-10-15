@@ -16,13 +16,14 @@ data Not a
 ------------------------------------------------------------------------------
 
 data IsEven
-data IsNonZero -- etc
+data IsNonZero
 data Minimum a
 data Maximum a
 data MaxLength a
 data MinLength a
 data Length a
 
+data HasElem a
 
 data ErrorTree e
   = Leaf e

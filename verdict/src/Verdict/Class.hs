@@ -13,6 +13,7 @@ import Verdict.Types
 class HaskVerdict a b where
     haskVerdict :: Proxy a -> b -> Maybe (ErrorTree String)
 
+
 ------------------------------------------------------------------------------
 -- * Logical Base Terms
 ------------------------------------------------------------------------------
@@ -50,6 +51,11 @@ instance (Ord b, Show b, KnownVal a b) => HaskVerdict (Minimum a) b where
 instance (Foldable t, KnownNat a) => HaskVerdict (Length a) (t b) where
     haskVerdict _ = check ((== p) . length) ("Should be of length " ++ show p)
       where p = fromInteger $ natVal (Proxy :: Proxy a)
+
+instance (Foldable t, Show b, Eq b, KnownVal a b)
+    => HaskVerdict (HasElem a) (t b) where
+    haskVerdict _ = check (elem p) ("Should contain " ++ show p)
+      where p = knownVal (Proxy :: Proxy a)
 
 check :: (x -> Bool) -> err -> x -> Maybe (ErrorTree err)
 check pred err x = guard (not $ pred x) >> pure (Leaf err)

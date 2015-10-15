@@ -10,6 +10,7 @@ module Verdict ( HaskVerdict(..)
                , IsEven
                , ErrorTree(..)
                , IsNonZero
+               , unsafeCoerceVal
                )  where
 
 import Verdict.Class

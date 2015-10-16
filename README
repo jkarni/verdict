@@ -78,7 +78,7 @@ is inside a circle of radius 'r' centered on coordinates '(cx, cy)':
 Additionally, you may also want to declare type instances for 'Implies'' which
 describe what things imply or are implied by your new constraint.
 
-> type instance Implies' (InCircle cx cy r) (InCircle cx cy r') = r' <= r
+> type instance Implies' (InCircle cx cy r) (InCircle cx cy r') = r <= r'
 
 > main :: IO ()
 > main = print $ testRead

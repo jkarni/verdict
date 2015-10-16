@@ -1,6 +1,12 @@
 > {-# LANGUAGE DataKinds #-}
 > {-# LANGUAGE TypeOperators #-}
+> {-# LANGUAGE ScopedTypeVariables #-}
+> {-# LANGUAGE PolyKinds #-}
+> {-# LANGUAGE MultiParamTypeClasses #-}
+> {-# LANGUAGE TypeFamilies #-}
 > import Verdict
+> import GHC.TypeLits
+> import Data.Proxy
 
 Sometimes you want to provide extra guarantees about a type that are best
 expressed in terms of a smart constructor with an opaque type:
@@ -53,11 +59,26 @@ not zero).
 
 The library provides some terms that can be used in the little constraint DSL.
 Additionally, you may want to create your own. Doing so is as easy as declaring
-an empty datatype, and a 'HaskVerdict' instance for it. Additionally, you may
-also want to declare type instances for 'Implies'' which describe what things
-imply or are implied by your new constraint.
+an empty datatype, and a 'HaskVerdict' instance for it. Let us for example
+define a predicate 'InCircle cx cy r', which is true of a 'Point' if the point
+is inside a circle of radius 'r' centered on coordinates '(cx, cy)':
 
--- TODO: Json schema, form validation
+> data InCircle centerX centerY radius
+> data Point = Point { x :: Integer, y :: Integer }
+
+> instance (KnownNat cx, KnownNat cy, KnownNat r)
+>   => HaskVerdict (InCircle cx cy r) Point where
+>    haskVerdict _
+>       = check (\p -> (x p - centerX) ^ 2 + (y p - centerY) ^ 2 < radius ^ 2) err
+>       where centerX = natVal (Proxy :: Proxy cx)
+>             centerY = natVal (Proxy :: Proxy cy)
+>             radius = natVal (Proxy :: Proxy r)
+>             err = "Point not inside circle: " ++ show ((centerX, centerY), radius)
+
+Additionally, you may also want to declare type instances for 'Implies'' which
+describe what things imply or are implied by your new constraint.
+
+> type instance Implies' (InCircle cx cy r) (InCircle cx cy r') = r' <= r
 
 > main :: IO ()
 > main = print $ testRead

@@ -4,6 +4,7 @@ module Verdict ( HaskVerdict(..)
                , getVal
                , Validated
                , Implies
+               , Implies'
                , Or
                , (:&&)
                , (:||)

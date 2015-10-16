@@ -34,6 +34,13 @@ val a = case haskVerdict (Proxy :: Proxy c) a of
 unsafeCoerceVal :: Validated c a -> Validated c' a
 unsafeCoerceVal = coerce
 
+protect :: ( MonadError (String, ErrorTree String) m
+        , HaskVerdict c a
+        ) => Proxy c -> String -> (a -> b) -> a -> m b
+protect p name fn a = case haskVerdict p a of
+    Nothing -> return $ fn a
+    Just e  -> throwError (name, e)
+
 -- | Function composition. Typechecks if the result of applying the first
 -- function has a constraint that implies the constraint of the argument of the
 -- second function.

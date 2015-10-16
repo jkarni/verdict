@@ -12,6 +12,13 @@ infixr 2 :||
 data Not a
 
 ------------------------------------------------------------------------------
+-- * Datatype Representation Terms
+------------------------------------------------------------------------------
+
+data a :* b
+infixr 5 :*
+
+------------------------------------------------------------------------------
 -- * Other Base Terms
 ------------------------------------------------------------------------------
 
@@ -29,4 +36,5 @@ data ErrorTree e
   = Leaf e
   | Or (ErrorTree e) (ErrorTree e)
   | And (ErrorTree e) (ErrorTree e)
+  | Sum (ErrorTree e) (ErrorTree e)
   deriving (Eq, Show, Functor)

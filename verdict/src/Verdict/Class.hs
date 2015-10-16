@@ -5,6 +5,7 @@ import Data.Proxy
 import Data.Monoid
 import GHC.TypeLits
 import Control.Monad
+import qualified Generics.SOP as G
 import Verdict.Types
 
 ------------------------------------------------------------------------------
@@ -27,6 +28,17 @@ instance (HaskVerdict a r, HaskVerdict b r) => HaskVerdict (a :|| b) r where
       where pa = Proxy :: Proxy a
             pb = Proxy :: Proxy b
 
+------------------------------------------------------------------------------
+-- * Datatype Representation Terms
+------------------------------------------------------------------------------
+
+{-instance ( G.Generic a ) => HaskVerdict (a :* b) r where-}
+    {-haskVerdict _ x = foldM (G.hcollapse . G.hap r $ G.from x)-}
+      {-where pa = Proxy :: Proxy a-}
+            {-pb = Proxy :: Proxy b-}
+            {-v1 = G.Fn $ \(G.I n) -> G.K (haskVerdict pa n)-}
+            {-v2 = G.Fn $ \(G.I n) -> G.K (haskVerdict pb n)-}
+            {-r  = (v1 G.:* v2 G.:* G.Nil) G.:* G.Nil-}
 
 ------------------------------------------------------------------------------
 -- * Other Base Terms
@@ -56,6 +68,12 @@ instance (Foldable t, Show b, Eq b, KnownVal a b)
     => HaskVerdict (HasElem a) (t b) where
     haskVerdict _ = check (elem p) ("Should contain " ++ show p)
       where p = knownVal (Proxy :: Proxy a)
+
+instance (HaskVerdict c a) => HaskVerdict (Not c) a where
+    haskVerdict _ x = case haskVerdict p x of
+        Just _ -> Nothing
+        Nothing -> Just (Leaf "this still needs to be figured out")
+      where p = Proxy :: Proxy c
 
 check :: (x -> Bool) -> err -> x -> Maybe (ErrorTree err)
 check pred err x = guard (not $ pred x) >> pure (Leaf err)

@@ -7,11 +7,18 @@ module Verdict ( HaskVerdict(..)
                , Or
                , (:&&)
                , (:||)
+               , Not
                , IsEven
-               , ErrorTree(..)
                , IsNonZero
+               , Minimum
+               , Maximum
+               , MaxLength
+               , MinLength
+               , Length
+               , ErrorTree(..)
                , unsafeCoerceVal
                , check
+               , KnownVal(..)
                )  where
 
 import Verdict.Class

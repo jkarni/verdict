@@ -46,12 +46,6 @@ instance (HaskVerdict a r, HaskVerdict b r) => HaskVerdict (a :|| b) r where
 instance HaskVerdict () a where
     haskVerdict _ = const Nothing
 
-instance Integral i => HaskVerdict IsEven i where
-    haskVerdict _ = check even "Should be even"
-
-instance (Eq i, Num i) => HaskVerdict IsNonZero i where
-    haskVerdict _ = check (/= 0) "Should be non-zero"
-
 instance (Ord b, Show b, KnownVal a b) => HaskVerdict (Maximum a) b where
     haskVerdict _ = check (<= p) ("Should be less than " ++ show p)
       where p = knownVal (Proxy :: Proxy a)
@@ -74,6 +68,10 @@ instance (HaskVerdict c a) => HaskVerdict (Not c) a where
         Just _ -> Nothing
         Nothing -> Just (Leaf "this still needs to be figured out")
       where p = Proxy :: Proxy c
+
+instance (KnownNat n, Integral a) => HaskVerdict (MultipleOf n) a where
+    haskVerdict _ = check (\x -> (toInteger x `rem` p) == 0) ("Not a multiple of " ++ show p)
+      where p = natVal (Proxy :: Proxy n)
 
 check :: (x -> Bool) -> err -> x -> Maybe (ErrorTree err)
 check pred err x = guard (not $ pred x) >> pure (Leaf err)

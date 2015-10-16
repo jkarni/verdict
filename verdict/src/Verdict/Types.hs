@@ -22,13 +22,12 @@ infixr 5 :*
 -- * Other Base Terms
 ------------------------------------------------------------------------------
 
-data IsEven
-data IsNonZero
 data Minimum a
 data Maximum a
 data MaxLength a
 data MinLength a
 data Length a
+data MultipleOf a
 
 data HasElem a
 

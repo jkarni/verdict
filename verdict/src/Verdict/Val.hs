@@ -1,4 +1,5 @@
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Verdict.Val where
 
 import Data.Proxy
@@ -40,6 +41,11 @@ protect :: ( MonadError (String, ErrorTree String) m
 protect p name fn a = case haskVerdict p a of
     Nothing -> return $ fn a
     Just e  -> throwError (name, e)
+
+checkWith :: forall m c a . (MonadError (ErrorTree String) m, HaskVerdict c a)
+    => a -> Proxy c -> m a
+checkWith v _ = getVal <$> v'
+  where v' = val v :: MonadError (ErrorTree String) m => m (Validated c a)
 
 -- | Function composition. Typechecks if the result of applying the first
 -- function has a constraint that implies the constraint of the argument of the

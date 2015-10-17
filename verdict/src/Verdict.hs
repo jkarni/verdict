@@ -19,6 +19,7 @@ module Verdict ( HaskVerdict(..)
                , ErrorTree(..)
                , unsafeCoerceVal
                , check
+               , checkWith
                , KnownVal(..)
                )  where
 

@@ -31,9 +31,18 @@ data MultipleOf a
 
 data HasElem a
 
+------------------------------------------------------------------------------
+-- * Other Types
+------------------------------------------------------------------------------
+
+-- | Error representation
 data ErrorTree e
   = Leaf e
   | Or (ErrorTree e) (ErrorTree e)
   | And (ErrorTree e) (ErrorTree e)
   | Sum (ErrorTree e) (ErrorTree e)
   deriving (Eq, Show, Functor)
+
+instance Monoid e => Monoid (ErrorTree e) where
+    mempty = Leaf mempty
+    mappend = And

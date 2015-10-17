@@ -28,6 +28,15 @@ instance (HaskVerdict a r, HaskVerdict b r) => HaskVerdict (a :|| b) r where
       where pa = Proxy :: Proxy a
             pb = Proxy :: Proxy b
 
+instance (HaskVerdict c a) => HaskVerdict (Not c) a where
+    haskVerdict _ x = case haskVerdict p x of
+        Just _ -> Nothing
+        Nothing -> Just (Leaf "this still needs to be figured out")
+      where p = Proxy :: Proxy c
+
+instance HaskVerdict 'True a where
+    haskVerdict _ _ = Nothing
+
 ------------------------------------------------------------------------------
 -- * Datatype Representation Terms
 ------------------------------------------------------------------------------
@@ -63,15 +72,10 @@ instance (Foldable t, Show b, Eq b, KnownVal a b)
     haskVerdict _ = check (elem p) ("Should contain " ++ show p)
       where p = knownVal (Proxy :: Proxy a)
 
-instance (HaskVerdict c a) => HaskVerdict (Not c) a where
-    haskVerdict _ x = case haskVerdict p x of
-        Just _ -> Nothing
-        Nothing -> Just (Leaf "this still needs to be figured out")
-      where p = Proxy :: Proxy c
-
 instance (KnownNat n, Integral a) => HaskVerdict (MultipleOf n) a where
     haskVerdict _ = check (\x -> (toInteger x `rem` p) == 0) ("Not a multiple of " ++ show p)
       where p = natVal (Proxy :: Proxy n)
+
 
 check :: (x -> Bool) -> err -> x -> Maybe (ErrorTree err)
 check pred err x = guard (not $ pred x) >> pure (Leaf err)
@@ -80,3 +84,6 @@ check pred err x = guard (not $ pred x) >> pure (Leaf err)
 -- Known Val
 class KnownVal a b | a -> b where
     knownVal :: Proxy a -> b
+
+instance KnownNat n => KnownVal n Integer where
+    knownVal = natVal

@@ -64,7 +64,7 @@ define a predicate 'InCircle cx cy r', which is true of a 'Point' if the point
 is inside a circle of radius 'r' centered on coordinates '(cx, cy)':
 
 > data InCircle centerX centerY radius
-> data Point = Point { x :: Integer, y :: Integer }
+> data Point = Point { x :: Integer, y :: Integer } deriving (Eq, Show)
 
 > instance (KnownNat cx, KnownNat cy, KnownNat r)
 >   => HaskVerdict (InCircle cx cy r) Point where
@@ -80,5 +80,22 @@ describe what things imply or are implied by your new constraint.
 
 > type instance Implies' (InCircle cx cy r) (InCircle cx cy r') = r <= r'
 
+Sometimes you may not want to or be able to change the types of records. You
+can still validate them:
+
+> mkUpperRightQuad :: Integer -> Integer -> Either (ErrorTree String) Point
+> mkUpperRightQuad x' y' = Point <$> x' `checkWith` (Proxy :: Proxy (Minimum 0))
+>                                <*> y' `checkWith` (Proxy :: Proxy (Minimum 0))
+
+Because the underlying error monad ('Either') does not accumulate errors, it is
+short-circuiting - only the first error will be show. But `checkWith` only
+requires a 'MonadError (ErrorTree String) m' constraint, so you are free to
+alter that behaviour by picking a different monad.
+
 > main :: IO ()
-> main = print $ testRead
+> main = do
+>   print $ mkUpperRightQuad 5 3
+>   print $ mkUpperRightQuad (-2) 1
+>   print $ mkUpperRightQuad (-2) (- 1)
+>   print $ mkUpperRightQuad 0 (- 1)
+>   print $ testRead

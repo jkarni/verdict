@@ -88,9 +88,7 @@ can still validate them:
 >                                <*> y' `checkWith` (Proxy :: Proxy (Minimum 0))
 
 Because the underlying error monad ('Either') does not accumulate errors, it is
-short-circuiting - only the first error will be show. But `checkWith` only
-requires a 'MonadError (ErrorTree String) m' constraint, so you are free to
-alter that behaviour by picking a different monad.
+short-circuiting - only the first error will be show.
 
 > main :: IO ()
 > main = do

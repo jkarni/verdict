@@ -21,6 +21,8 @@ module Verdict ( HaskVerdict(..)
                , check
                , checkWith
                , KnownVal(..)
+               , Failure(..)
+               , ApplicativeError(..)
                )  where
 
 import Verdict.Class

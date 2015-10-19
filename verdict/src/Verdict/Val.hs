@@ -1,11 +1,10 @@
-{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Verdict.Val where
 
 import Data.Proxy
 import Data.Coerce
 import Control.Arrow (first)
-import Control.Monad.Error.Class
 import Text.Read
 
 import Verdict.Class
@@ -23,10 +22,10 @@ instance (HaskVerdict c v, Read v) => Read (Validated c v) where
     readPrec = force . val <$> readPrec
       where force = either (error . show) id
 
-val :: forall c a m . (HaskVerdict c a, MonadError (ErrorTree String) m)
+val :: forall c a m . (HaskVerdict c a, ApplicativeError ErrorTree m)
     => a -> m (Validated c a)
 val a = case haskVerdict (Proxy :: Proxy c) a of
-    Nothing -> return $ Validated a
+    Nothing -> pure $ Validated a
     Just err -> throwError err
 
 -- | Coerce a 'Validated' to another set of constraints. This is safe with
@@ -35,17 +34,17 @@ val a = case haskVerdict (Proxy :: Proxy c) a of
 unsafeCoerceVal :: Validated c a -> Validated c' a
 unsafeCoerceVal = coerce
 
-protect :: ( MonadError (String, ErrorTree String) m
-        , HaskVerdict c a
-        ) => Proxy c -> String -> (a -> b) -> a -> m b
+protect :: ( ApplicativeError (String, ErrorTree) m
+           , HaskVerdict c a
+           ) => Proxy c -> String -> (a -> b) -> a -> m b
 protect p name fn a = case haskVerdict p a of
-    Nothing -> return $ fn a
+    Nothing -> pure $ fn a
     Just e  -> throwError (name, e)
 
-checkWith :: forall m c a . (MonadError (ErrorTree String) m, HaskVerdict c a)
-    => a -> Proxy c -> m a
+checkWith :: forall m c a . (ApplicativeError ErrorTree m, HaskVerdict c a)
+          => a -> Proxy c -> m a
 checkWith v _ = getVal <$> v'
-  where v' = val v :: MonadError (ErrorTree String) m => m (Validated c a)
+  where v' = val v :: ApplicativeError ErrorTree m => m (Validated c a)
 
 -- | Function composition. Typechecks if the result of applying the first
 -- function has a constraint that implies the constraint of the argument of the

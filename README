@@ -1,12 +1,16 @@
 > {-# LANGUAGE DataKinds #-}
-> {-# LANGUAGE TypeOperators #-}
-> {-# LANGUAGE ScopedTypeVariables #-}
-> {-# LANGUAGE PolyKinds #-}
+> {-# LANGUAGE FlexibleContexts #-}
 > {-# LANGUAGE MultiParamTypeClasses #-}
+> {-# LANGUAGE PolyKinds #-}
+> {-# LANGUAGE ScopedTypeVariables #-}
 > {-# LANGUAGE TypeFamilies #-}
-> import Verdict
+> {-# LANGUAGE TypeOperators #-}
+> {-# LANGUAGE OverloadedStrings #-}
 > import GHC.TypeLits
 > import Data.Proxy
+> import Data.Monoid
+> import qualified Data.Text as Text
+> import Verdict
 
 Sometimes you want to provide extra guarantees about a type that are best
 expressed in terms of a smart constructor with an opaque type:
@@ -33,7 +37,7 @@ Instead, with 'verdict' you can do this:
 
 The smart constructor comes for free as 'val'. Specialized for clarity:
 
-> mkNonEmpty :: [a] -> Either (ErrorTree String) (NonEmptyList a)
+> mkNonEmpty :: [a] -> Either ErrorTree (NonEmptyList a)
 > mkNonEmpty = val
 
 The 'Read' instance also comes for free, and checks for validity:
@@ -73,7 +77,7 @@ is inside a circle of radius 'r' centered on coordinates '(cx, cy)':
 >       where centerX = natVal (Proxy :: Proxy cx)
 >             centerY = natVal (Proxy :: Proxy cy)
 >             radius = natVal (Proxy :: Proxy r)
->             err = "Point not inside circle: " ++ show ((centerX, centerY), radius)
+>             err = "Point not inside circle: " <> (Text.pack $ show ((centerX, centerY), radius))
 
 Additionally, you may also want to declare type instances for 'Implies'' which
 describe what things imply or are implied by your new constraint.
@@ -83,17 +87,29 @@ describe what things imply or are implied by your new constraint.
 Sometimes you may not want to or be able to change the types of records. You
 can still validate them:
 
-> mkUpperRightQuad :: Integer -> Integer -> Either (ErrorTree String) Point
+> mkUpperRightQuad :: ApplicativeError ErrorTree m
+>                  => Integer -> Integer -> m Point
 > mkUpperRightQuad x' y' = Point <$> x' `checkWith` (Proxy :: Proxy (Minimum 0))
 >                                <*> y' `checkWith` (Proxy :: Proxy (Minimum 0))
 
-Because the underlying error monad ('Either') does not accumulate errors, it is
-short-circuiting - only the first error will be show.
+If we instantiate 'ApplicativeError' to a short-circuiting applicative (like
+'Either'), only the first result will be returned. If we use something like
+'Failure', all of them will:
 
 > main :: IO ()
 > main = do
->   print $ mkUpperRightQuad 5 3
->   print $ mkUpperRightQuad (-2) 1
->   print $ mkUpperRightQuad (-2) (- 1)
->   print $ mkUpperRightQuad 0 (- 1)
->   print $ testRead
+>   print (mkUpperRightQuad 5 3 :: Either ErrorTree Point)
+>   print (mkUpperRightQuad (-2) 1 :: Either ErrorTree Point)
+>   print (mkUpperRightQuad (-2) (- 1) :: Either ErrorTree Point)
+>   print (mkUpperRightQuad (-2) (- 1) :: Failure ErrorTree Point)
+>   print (mkUpperRightQuad 0 (- 1) :: Either ErrorTree Point)
+>   print testRead
+
+The results:
+
+Right (Point {x = 5, y = 3})
+Left (Leaf "Should be more than 0")
+Left (Leaf "Should be more than 0")
+Failure (And (Leaf "Should be more than 0") (Leaf "Should be more than 0"))
+Left (Leaf "Should be more than 0")
+tutorial: Leaf "this still needs to be figured out"

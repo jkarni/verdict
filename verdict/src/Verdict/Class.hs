@@ -1,10 +1,12 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Verdict.Class where
 
 import Control.Applicative
-import Data.Proxy
-import Data.Monoid
-import GHC.TypeLits
 import Control.Monad
+import Data.Monoid
+import Data.Proxy
+import qualified Data.Text as Text
+import GHC.TypeLits
 import qualified Generics.SOP as G
 import Verdict.Types
 
@@ -12,7 +14,7 @@ import Verdict.Types
 -- * HaskVerdict
 ------------------------------------------------------------------------------
 class HaskVerdict a b where
-    haskVerdict :: Proxy a -> b -> Maybe (ErrorTree String)
+    haskVerdict :: Proxy a -> b -> Maybe ErrorTree
 
 
 ------------------------------------------------------------------------------
@@ -56,28 +58,30 @@ instance HaskVerdict () a where
     haskVerdict _ = const Nothing
 
 instance (Ord b, Show b, KnownVal a b) => HaskVerdict (Maximum a) b where
-    haskVerdict _ = check (<= p) ("Should be less than " ++ show p)
+    haskVerdict _ = check (<= p) ("Should be less than " <> showT p)
       where p = knownVal (Proxy :: Proxy a)
 
 instance (Ord b, Show b, KnownVal a b) => HaskVerdict (Minimum a) b where
-    haskVerdict _ = check (>= p) ("Should be more than " ++ show p)
+    haskVerdict _ = check (>= p) ("Should be more than " <> showT p)
       where p = knownVal (Proxy :: Proxy a)
 
 instance (Foldable t, KnownNat a) => HaskVerdict (Length a) (t b) where
-    haskVerdict _ = check ((== p) . length) ("Should be of length " ++ show p)
+    haskVerdict _ = check ((== p) . length) ("Should be of length " <> showT p)
       where p = fromInteger $ natVal (Proxy :: Proxy a)
 
 instance (Foldable t, Show b, Eq b, KnownVal a b)
     => HaskVerdict (HasElem a) (t b) where
-    haskVerdict _ = check (elem p) ("Should contain " ++ show p)
+    haskVerdict _ = check (elem p) ("Should contain " <> showT p)
       where p = knownVal (Proxy :: Proxy a)
 
 instance (KnownNat n, Integral a) => HaskVerdict (MultipleOf n) a where
-    haskVerdict _ = check (\x -> (toInteger x `rem` p) == 0) ("Not a multiple of " ++ show p)
+    haskVerdict _ = check (\x -> (toInteger x `rem` p) == 0) ("Not a multiple of " <> showT p)
       where p = natVal (Proxy :: Proxy n)
 
+showT :: Show a => a -> Text.Text
+showT = Text.pack . show
 
-check :: (x -> Bool) -> err -> x -> Maybe (ErrorTree err)
+check :: (x -> Bool) -> err -> x -> Maybe (ErrorTree' err)
 check pred err x = guard (not $ pred x) >> pure (Leaf err)
 
 ------------------------------------------------------------------------------

@@ -51,7 +51,7 @@ specSpec = describe "Spec" $ do
                                                             , String "age"
                                                             ])
                           ]
-    let jspec = jsonSchema (Proxy :: Proxy Person)
+    let jspec = mkAny $ jsonSchema (Proxy :: Proxy Person)
     toJSON jspec `shouldBe` expected
 
 
@@ -68,9 +68,11 @@ data Person = Person
     } deriving (Eq, Show, Read, Generic, ToJSON)
 
 instance JsonSchema Person where
-    jsonSchema _ = JsonSpec
-        $ Map.fromList [ ("name", Left $ jsonVerdict namep)
-                       , ("age" , Left $ jsonVerdict agep )
-                       ]
-      where namep = Proxy :: Proxy NameC
-            agep  = Proxy :: Proxy AgeC
+    type JsonType Person = ObjectSchema
+    jsonSchema _ = mempty { properties = Map.fromList
+                                [ ("name", (Required, mkAny $ jsonSchema namep))
+                                , ("age" , (Required, mkAny $ jsonSchema agep ))
+                                ]
+                          }
+      where namep = Proxy :: Proxy Name
+            agep  = Proxy :: Proxy Age

@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableInstances #-}
 module Verdict.JSON.Class where
 
 import qualified Data.Text as Text

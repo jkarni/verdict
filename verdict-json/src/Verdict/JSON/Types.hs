@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Verdict.JSON.Types
     ( JsonConstraint(..)
     , JSONKey

@@ -6,7 +6,7 @@ import Verdict.JSON ()
 import Test.Hspec (Spec, it, describe, shouldBe, shouldContain)
 import Data.Aeson (decode, eitherDecode)
 
-type EvenInt = Validated IsEven Int
+type EvenInt = Validated (MultipleOf 2) Int
 
 spec :: Spec
 spec = describe "Verdict.JSON" $ do
@@ -16,7 +16,7 @@ spec = describe "Verdict.JSON" $ do
 
     it "gives a useful error message" $ do
         let Left e = eitherDecode "5" :: Either String EvenInt
-        e `shouldContain` "Should be even"
+        e `shouldContain` "Not a multiple of 2"
 
     it "parses valid values" $ do
         let (Right exp) = val 4

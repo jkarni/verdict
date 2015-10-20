@@ -1,10 +1,10 @@
+{-# LANGUAGE PolyKinds            #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE PolyKinds #-}
 module Verdict.Logic where
 
-import GHC.Exts (Constraint)
-import GHC.TypeLits
-import Verdict.Types
+import           GHC.Exts      (Constraint)
+import           GHC.TypeLits
+import           Verdict.Types
 
 
 type family Or (a :: Constraint) (b :: Constraint) :: Constraint where

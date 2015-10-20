@@ -1,12 +1,12 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Verdict.JSON.Class where
 
-import Data.Monoid
-import qualified Data.Text as Text
-import GHC.TypeLits
-import Data.Proxy
-import Verdict.JSON.Types
-import Verdict
+import           Data.Monoid
+import           Data.Proxy
+import qualified Data.Text          as Text
+import           GHC.TypeLits
+import           Verdict
+import           Verdict.JSON.Types
 
 class JsonVerdict a where
     jsonVerdict :: proxy a -> [JsonConstraint Text.Text]
@@ -29,4 +29,4 @@ instance (JsonVerdict a, JsonVerdict b) => JsonVerdict (a :&& b) where
             pb = Proxy :: Proxy b
 
 class JsonSchema a where
-    jsonSchema :: proxy a -> Spec
+    jsonSchema :: proxy a -> JsonSpec

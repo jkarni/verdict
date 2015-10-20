@@ -3,12 +3,13 @@ module Verdict.JSON.Types
     ( JsonConstraint(..)
     , JSONKey
     , ValidJSONKey
-    , Spec(..)
+    , JsonSpec(..)
     ) where
 
-import Verdict
-import qualified Data.Map as Map
+import           Data.Aeson
+import qualified Data.Map  as Map
 import qualified Data.Text as Text
+import           Verdict
 
 data JsonConstraint a
     = Minimum Int
@@ -34,6 +35,9 @@ data C = Continue | Escaped | Bad
     deriving (Eq, Show, Read)
 
 type JSONKey = Validated ValidJSONKey Text.Text
-newtype Spec = Spec
-  { unspec :: Map.Map JSONKey (Either [JsonConstraint Text.Text] Spec) }
+newtype JsonSpec = JsonSpec
+  { unspec :: Map.Map JSONKey (Either [JsonConstraint Text.Text] JsonSpec) }
   deriving (Eq, Show, Read)
+
+instance ToJSON JsonSpec where
+    toJSON = undefined

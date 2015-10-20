@@ -1,4 +1,3 @@
-{-# LANGUAGE ConstraintKinds #-}
 module Verdict ( HaskVerdict(..)
                , val
                , getVal
@@ -26,8 +25,8 @@ module Verdict ( HaskVerdict(..)
                , ApplicativeError(..)
                ) where
 
-import Verdict.Class
-import Verdict.Failure
-import Verdict.Types
-import Verdict.Logic
-import Verdict.Val
+import           Verdict.Class
+import           Verdict.Failure
+import           Verdict.Logic
+import           Verdict.Types
+import           Verdict.Val

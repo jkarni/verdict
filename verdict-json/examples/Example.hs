@@ -1,13 +1,13 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
-import Data.Proxy (Proxy(..))
-import GHC.Generics (Generic)
-import qualified Data.Map as Map
+{-# LANGUAGE TypeOperators     #-}
+import qualified Data.Map     as Map
+import           Data.Proxy   (Proxy (..))
+import           GHC.Generics (Generic)
 
-import Verdict
-import Verdict.JSON
+import           Verdict
+import           Verdict.JSON
 
 type NameC = MinLength 1 :&& MaxLength 100
 type Name = Validated NameC String
@@ -20,9 +20,9 @@ data Person = Person
     } deriving (Eq, Show, Read, Generic)
 
 instance JsonSchema Person where
-    jsonSchema _ = Spec $ Map.fromList [ ("name", Left $ jsonVerdict namep)
-                                       , ("age" , Left $ jsonVerdict agep )
-                                       ]
+    jsonSchema _ = JsonSpec $ Map.fromList [ ("name", Left $ jsonVerdict namep)
+                                           , ("age" , Left $ jsonVerdict agep )
+                                           ]
       where namep = Proxy :: Proxy NameC
             agep  = Proxy :: Proxy AgeC
 

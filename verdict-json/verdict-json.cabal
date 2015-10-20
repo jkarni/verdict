@@ -15,7 +15,9 @@ library
   ghc-options:         -Wall
   other-modules:       Verdict.JSON.Class
                      , Verdict.JSON.Types
-  extensions:          DeriveFunctor
+  default-extensions:  DeriveFunctor
+                     , DeriveGeneric
+                     , DeriveDataTypeable
                      , TypeOperators
                      , MultiParamTypeClasses
                      , DataKinds
@@ -41,7 +43,9 @@ test-suite spec
   hs-source-dirs:      test
   main-is:             Spec.hs
   other-modules:       Verdict.JSONSpec
-  default-extensions:  DeriveFunctor
+  default-extensions:  DeriveAnyClass
+                     , DeriveFunctor
+                     , DeriveGeneric
                      , TypeOperators
                      , MultiParamTypeClasses
                      , DataKinds
@@ -53,6 +57,8 @@ test-suite spec
                      , TypeFamilies
   build-depends:       base == 4.*
                      , aeson >= 0.10
+                     , containers
+                     , vector
                      , verdict
                      , verdict-json
                      , hspec == 2.*

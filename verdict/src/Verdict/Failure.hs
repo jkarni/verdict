@@ -1,10 +1,13 @@
-module Verdict.Failure (Failure(..), ApplicativeError(..)) where
+module Verdict.Failure
+    ( Failure(..)
+    , ApplicativeError(..)
+    ) where
 
-import GHC.Generics (Generic)
-import Data.Monoid
-import Data.Typeable (Typeable)
+import           Control.Exception          (IOException, catch)
 import qualified Control.Monad.Trans.Except as ExceptT
-import Control.Exception (IOException, catch)
+import           Data.Monoid
+import           Data.Typeable              (Typeable)
+import           GHC.Generics               (Generic)
 
 data Failure e a = Failure e | Success a
   deriving (Eq, Show, Functor, Generic, Typeable)

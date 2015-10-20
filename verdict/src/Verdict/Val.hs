@@ -2,15 +2,15 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Verdict.Val where
 
-import Data.Proxy
-import Data.Coerce (coerce)
-import Data.String (IsString(..))
-import Text.Read
+import           Data.Coerce     (coerce)
+import           Data.Proxy
+import           Data.String     (IsString (..))
+import           Text.Read
 
-import Verdict.Class
-import Verdict.Failure
-import Verdict.Types
-import Verdict.Logic
+import           Verdict.Class
+import           Verdict.Failure
+import           Verdict.Logic
+import           Verdict.Types
 
 ------------------------------------------------------------------------------
 -- * Val

@@ -18,7 +18,7 @@ install:
 
 script:
   - stack setup
-  - stack build --test --ghc-options "-Werror"
+  - stack build --test
 
 cache:
   directories:

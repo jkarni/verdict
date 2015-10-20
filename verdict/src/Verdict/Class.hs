@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Verdict.Class where
 
-import Control.Monad
-import Data.Monoid
-import Data.Proxy
-import qualified Data.Text as Text
-import GHC.TypeLits
-import Verdict.Types
+import           Control.Monad
+import           Data.Monoid
+import           Data.Proxy
+import qualified Data.Text     as Text
+import           GHC.TypeLits
+import           Verdict.Types
 
 ------------------------------------------------------------------------------
 -- * HaskVerdict

@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-unused-binds #-}
 module Verdict.JSONSpec (spec) where
 
 import           Data.Aeson
@@ -28,8 +29,8 @@ fromJSONSpec = describe "FromJSON instance" $ do
     e `shouldContain` "Not a multiple of 2"
 
   it "parses valid values" $ do
-    let (Right exp) = val 4
-    (decode "4" :: Maybe EvenInt) `shouldBe` Just exp
+    let (Right expected) = val 4
+    (decode "4" :: Maybe EvenInt) `shouldBe` Just expected
 
 specSpec :: Spec
 specSpec = describe "Spec" $ do
@@ -47,11 +48,11 @@ specSpec = describe "Spec" $ do
                        ]
     let expected = object [ "properties" .= props
                           , "required"   .= Array (fromList [ String "name"
-                                                             , String "age"
-                                                             ])
+                                                            , String "age"
+                                                            ])
                           ]
-    let spec = jsonSchema (Proxy :: Proxy Person)
-    toJSON spec `shouldBe` expected
+    let jspec = jsonSchema (Proxy :: Proxy Person)
+    toJSON jspec `shouldBe` expected
 
 
 type EvenInt = Validated (MultipleOf 2) Int

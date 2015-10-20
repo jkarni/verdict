@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Verdict.JSON
-    ( JsonVerdict(..)
-    , JsonSchema(..)
+    ( JsonSchema(..)
     , JsonSpec(..)
     , JsonConstraint(..)
     , SchemaType(..)

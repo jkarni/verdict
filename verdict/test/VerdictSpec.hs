@@ -10,6 +10,8 @@ spec = describe "Verdict" $ do
     minimumSpec
     maxLengthSpec
     minLengthSpec
+    lengthSpec
+    multipleOfSpec
 
 maximumSpec :: Spec
 maximumSpec = describe "Maximum" $ do
@@ -69,4 +71,26 @@ minLengthSpec = describe "MinLength" $ do
 
   it "accepts equal sized values" $ do
     (val [()] :: Either ErrorTree (Validated (MinLength 1) [()]))
+        `shouldSatisfy` isRight
+
+lengthSpec :: Spec
+lengthSpec = describe "Length" $ do
+
+  it "rejects differing lengths" $ do
+    (val [()] :: Either ErrorTree (Validated (Length 2) [()]))
+        `shouldSatisfy` isLeft
+
+  it "accepts matching lengths" $ do
+    (val [()] :: Either ErrorTree (Validated (Length 1) [()]))
+        `shouldSatisfy` isRight
+
+multipleOfSpec :: Spec
+multipleOfSpec = describe "MultipleOf" $ do
+
+  it "rejects non-multiples" $ do
+    (val 5 :: Either ErrorTree (Validated (MultipleOf 2) Integer))
+        `shouldSatisfy` isLeft
+
+  it "accepts multiples" $ do
+    (val 4 :: Either ErrorTree (Validated (MultipleOf 2) Integer))
         `shouldSatisfy` isRight

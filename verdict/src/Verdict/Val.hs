@@ -5,10 +5,10 @@ module Verdict.Val where
 import Data.Proxy
 import Data.Coerce (coerce)
 import Data.String (IsString(..))
-import Control.Arrow (first)
 import Text.Read
 
 import Verdict.Class
+import Verdict.Failure
 import Verdict.Types
 import Verdict.Logic
 

@@ -16,16 +16,18 @@ module Verdict ( HaskVerdict(..)
                , Length
                , MultipleOf
                , HasElem
-               , ErrorTree(..)
+               , ErrorTree
+               , ErrorTree'(..)
                , unsafeCoerceVal
                , check
                , checkWith
                , KnownVal(..)
                , Failure(..)
                , ApplicativeError(..)
-               )  where
+               ) where
 
 import Verdict.Class
+import Verdict.Failure
 import Verdict.Types
 import Verdict.Logic
 import Verdict.Val

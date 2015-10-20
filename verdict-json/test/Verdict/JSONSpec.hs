@@ -58,10 +58,8 @@ specSpec = describe "Spec" $ do
 
 type EvenInt = Validated (MultipleOf 2) Int
 
-type NameC = MinLength 1 :&& MaxLength 100
-type Name  = Validated NameC String
-type AgeC  = Minimum 0 :&& Maximum 200
-type Age   = Validated AgeC Integer
+type Name  = Validated (MinLength 1 :&& MaxLength 100) String
+type Age   = Validated (Minimum 0 :&& Maximum 200) Integer
 
 data Person = Person
     { name :: Name

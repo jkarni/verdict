@@ -1,8 +1,16 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module Verdict.JSON ( JsonVerdict(..)
-                    , JsonSchema(..)
-                    , JsonSpec(..)
-                    ) where
+module Verdict.JSON
+    ( JsonVerdict(..)
+    , JsonSchema(..)
+    , JsonSpec(..)
+    , JsonConstraint(..)
+    , SchemaType(..)
+    , ObjectSchema(..)
+    , AnySchema(..)
+    , Required(..)
+    , mkAny
+    , jsonSchema
+    ) where
 
 import Data.Aeson
 import Verdict

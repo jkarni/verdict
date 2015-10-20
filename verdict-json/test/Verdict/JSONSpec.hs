@@ -52,15 +52,14 @@ specSpec = describe "Spec" $ do
                                                             ])
                           ]
     let jspec = jsonSchema (Proxy :: Proxy Person)
+    print $ encode jspec
     toJSON jspec `shouldBe` expected
 
 
 type EvenInt = Validated (MultipleOf 2) Int
 
-type NameC = MinLength 1 :&& MaxLength 100
-type Name  = Validated NameC String
-type AgeC  = Minimum 0 :&& Maximum 200
-type Age   = Validated AgeC Integer
+type Name  = Validated (MinLength 1 :&& MaxLength 100) String
+type Age   = Validated (Minimum 0 :&& Maximum 200) Integer
 
 data Person = Person
     { name :: Name
@@ -68,9 +67,11 @@ data Person = Person
     } deriving (Eq, Show, Read, Generic, ToJSON)
 
 instance JsonSchema Person where
-    jsonSchema _ = JsonSpec
-        $ Map.fromList [ ("name", Left $ jsonVerdict namep)
-                       , ("age" , Left $ jsonVerdict agep )
-                       ]
-      where namep = Proxy :: Proxy NameC
-            agep  = Proxy :: Proxy AgeC
+    type JsonType Person = ObjectSchema
+    jsonSchema' _ = mempty { properties = Map.fromList
+                                [ ("name", (Required, jsonSchema namep))
+                                , ("age" , (Required, jsonSchema agep ))
+                                ]
+                          }
+      where namep = Proxy :: Proxy Name
+            agep  = Proxy :: Proxy Age

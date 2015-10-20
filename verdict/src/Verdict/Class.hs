@@ -1,13 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Verdict.Class where
 
-import Control.Applicative
 import Control.Monad
 import Data.Monoid
 import Data.Proxy
 import qualified Data.Text as Text
 import GHC.TypeLits
-import qualified Generics.SOP as G
 import Verdict.Types
 
 ------------------------------------------------------------------------------
@@ -94,7 +92,7 @@ showT :: Show a => a -> Text.Text
 showT = Text.pack . show
 
 check :: (x -> Bool) -> err -> x -> Maybe (ErrorTree' err)
-check pred err x = guard (not $ pred x) >> pure (Leaf err)
+check pred' err x = guard (not $ pred' x) >> pure (Leaf err)
 
 ------------------------------------------------------------------------------
 -- Known Val

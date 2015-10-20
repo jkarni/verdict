@@ -53,15 +53,15 @@ instance (ToJSON a, ToJSON b) => ToJSON (Either' a b) where
 
 data ObjectSchema = ObjectSchema
     { properties           :: Map.Map Text.Text (Required, AnySchema)
-    , additionalProperties :: Either' Bool AnySchema
+    , additionalProperties :: ()
     , patternProperties    :: Map.Map Text.Text AnySchema
     } deriving (Eq, Show, Read, Generic)
 
 instance Monoid ObjectSchema where
-    mempty = ObjectSchema mempty (Right' mempty) mempty
+    mempty = ObjectSchema mempty mempty mempty
     a `mappend` b = ObjectSchema
         { properties           = properties a <> properties b
-        , additionalProperties = Right' mempty
+        , additionalProperties = mempty
         , patternProperties    = patternProperties a <> patternProperties b
         }
 

@@ -5,11 +5,11 @@ module Verdict.JSON
     , JsonSpec(..)
     , JsonConstraint(..)
     , SchemaType(..)
-    , JsonType(..)
     , ObjectSchema(..)
     , AnySchema(..)
     , Required(..)
     , mkAny
+    , jsonSchema
     ) where
 
 import Data.Aeson

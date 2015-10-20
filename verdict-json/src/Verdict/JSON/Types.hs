@@ -34,5 +34,6 @@ data C = Continue | Escaped | Bad
     deriving (Eq, Show, Read)
 
 type JSONKey = Validated ValidJSONKey Text.Text
-newtype Spec = Spec { unspec :: Map.Map JSONKey (Either (JsonConstraint Text.Text) Spec) }
+newtype Spec = Spec
+  { unspec :: Map.Map JSONKey (Either [JsonConstraint Text.Text] Spec) }
   deriving (Eq, Show, Read)

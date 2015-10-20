@@ -1,8 +1,14 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module Verdict.JSON where
+module Verdict.JSON ( JsonVerdict(..)
+                    , JsonSchema(..)
+                    , Spec(..)
+                    ) where
 
 import Data.Aeson
 import Verdict
+
+import Verdict.JSON.Class
+import Verdict.JSON.Types
 
 instance (HaskVerdict c a, FromJSON a) => FromJSON (Validated c a) where
     parseJSON x = parseJSON x >>= either (fail . show) return . val

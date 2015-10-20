@@ -3,7 +3,8 @@
 module Verdict.Val where
 
 import Data.Proxy
-import Data.Coerce
+import Data.Coerce (coerce)
+import Data.String (IsString(..))
 import Control.Arrow (first)
 import Text.Read
 
@@ -20,6 +21,10 @@ newtype Validated constraint a = Validated { getVal :: a }
 
 instance (HaskVerdict c v, Read v) => Read (Validated c v) where
     readPrec = force . val <$> readPrec
+      where force = either (error . show) id
+
+instance (HaskVerdict c v, IsString v) => IsString (Validated c v) where
+    fromString = force . val . fromString
       where force = either (error . show) id
 
 val :: forall c a m . (HaskVerdict c a, ApplicativeError ErrorTree m)

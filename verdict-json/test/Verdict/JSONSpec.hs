@@ -10,6 +10,11 @@ type EvenInt = Validated (MultipleOf 2) Int
 
 spec :: Spec
 spec = describe "Verdict.JSON" $ do
+    fromJSONSpec
+
+
+fromJSONSpec :: Spec
+fromJSONSpec = describe "FromJSON instance" $ do
 
     it "does validation when parsing" $ do
         (decode "5" :: Maybe EvenInt) `shouldBe` Nothing

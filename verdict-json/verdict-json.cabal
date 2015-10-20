@@ -41,8 +41,7 @@ library
 
 test-suite spec
   type: exitcode-stdio-1.0
-  ghc-options:
-    -Wall -fno-warn-name-shadowing -fno-warn-missing-signatures
+  ghc-options:         -Wall
   default-language: Haskell2010
   hs-source-dirs: test
   main-is: Spec.hs
@@ -62,3 +61,15 @@ test-suite spec
     , verdict
     , verdict-json
     , hspec == 2.*
+
+executable Example
+  main-is:             Example.hs
+  hs-source-dirs:      examples
+  ghc-options:         -Wall
+  build-depends:       base >=4.7 && <4.9
+                     , verdict
+                     , verdict-json
+                     , containers
+                     , aeson
+  default-language:    Haskell2010
+

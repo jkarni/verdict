@@ -17,7 +17,7 @@ type family Implies (a :: k) (b :: k) :: Constraint where
     Implies a (Not a) = ('True ~ 'False)
     Implies (Not a) a = ('True ~ 'False)
     Implies a (Not (Not a)) = ()
-    Implies a True = ()
+    Implies a 'True = ()
     Implies a b = Implies' a b
 
 type family Implies' a b :: Constraint

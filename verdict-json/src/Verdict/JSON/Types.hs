@@ -9,18 +9,6 @@ import           Data.Monoid
 import qualified Data.Text as Text
 import           Data.Vector (fromList)
 import           GHC.Generics (Generic)
-import           Verdict
-
-data JsonConstraint a
-    = Minimum Int
-    | Maximum Int
-    | MaxLength Int
-    | MinLength Int
-    | OtherError a
-    deriving (Eq, Show, Read, Functor, Generic)
-
-data Regex = Regex
-  deriving (Eq, Show, Read, Generic)
 
 data NumericT = JSONInteger | JSONNumeric
   deriving (Eq, Show, Read, Generic)
@@ -29,20 +17,22 @@ data AnySchema = ObjectS ObjectSchema
                | NumericS NumericSchema
                {-| ArrayS ArraySchema-}
                | StringS StringSchema
+               | EmptyS
   deriving (Eq, Show, Read, Generic)
 
 instance Monoid AnySchema where
-    mempty = ObjectS mempty
-    (ObjectS a) `mappend` (ObjectS b) = ObjectS (a <> b)
+    mempty = EmptyS
+    (ObjectS a)  `mappend` (ObjectS b)  = ObjectS (a <> b)
     (NumericS a) `mappend` (NumericS b) = NumericS (a <> b)
-    (StringS a) `mappend` (StringS b) = StringS (a <> b)
-    _ `mappend` _ = error "must be same constructor"
-
+    (StringS a)  `mappend` (StringS b)  = StringS (a <> b)
+    EmptyS       `mappend` x            = x
+    _            `mappend` _            = error "must be same constructor"
 
 instance ToJSON AnySchema where
-    toJSON (ObjectS os) = toJSON os
+    toJSON (ObjectS os)  = toJSON os
     toJSON (NumericS ns) = toJSON ns
-    toJSON (StringS ss) = toJSON ss
+    toJSON (StringS ss)  = toJSON ss
+    toJSON EmptyS        = object []
 
 data Either' a b = Left' a | Right' b
     deriving (Eq, Show, Read, Functor, Generic)
@@ -65,7 +55,6 @@ instance Monoid ObjectSchema where
         , patternProperties    = patternProperties a <> patternProperties b
         }
 
-
 instance ToJSON ObjectSchema where
     toJSON os = object [
         "properties"           .= toJSON (snd <$> properties os)
@@ -84,9 +73,9 @@ data NumericSchema = NumericSchema
 instance Monoid NumericSchema where
     mempty = NumericSchema mempty mempty mempty
     a `mappend` b = NumericSchema { multipleOf = multipleOf a <> multipleOf b
-                                 , maximum' = maximum' a <> maximum' b
-                                 , minimum' = minimum' a <> minimum' b
-                                 }
+                                  , maximum' = maximum' a <> maximum' b
+                                  , minimum' = minimum' a <> minimum' b
+                                  }
 
 instance ToJSON NumericSchema where
     toJSON ns = object [
@@ -99,20 +88,19 @@ newtype Max = Max { unMax :: Int}
     deriving (Eq, Show, Bounded, Ord, Read, Generic)
 
 instance Monoid Max where
-    mempty = minBound
+    mempty  = minBound
     mappend = max
 
 newtype Min = Min { unMin :: Int }
     deriving (Eq, Show, Bounded, Ord, Read, Generic)
 
 instance Monoid Min where
-    mempty = maxBound
+    mempty  = maxBound
     mappend = min
-
 
 data ArraySchema = ArraySchema
     { items           :: [AnySchema]
-    , additionalItems :: Either Bool AnySchema
+    , additionalItems :: Either' Bool AnySchema
     } deriving (Eq, Show, Read, Generic)
 
 data StringSchema = StringSchema
@@ -128,29 +116,21 @@ instance Monoid StringSchema where
                                  }
 
 instance ToJSON StringSchema where
-    toJSON ss = object $ catMaybes [ ("maxLength" .=) <$> (toJSON . unMax <$> maxLength ss)
-                                   , ("minLength" .=) <$> (toJSON . unMin <$> minLength ss)
-                                   ]
+    toJSON ss = object $
+        catMaybes [ ("maxLength" .=) <$> (toJSON . unMax <$> maxLength ss)
+                  , ("minLength" .=) <$> (toJSON . unMin <$> minLength ss)
+                  ]
 
 data Metadata = Metadata
     { title       :: Maybe Text.Text
     , description :: Maybe Text.Text
-    }
-
-
-
+    } deriving (Eq, Show, Read, Generic)
 
 data SchemaVersion = Draft4
   deriving (Eq, Show, Read, Generic)
 
 data Required = Required | NotRequired
   deriving (Eq, Show, Read, Generic)
-
-{-data JsonProperty a-}
-    {-= JsonProperty { constraints :: [JsonConstraint a]-}
-                   {-, type'       :: SchemaType-}
-                   {-, description :: Maybe NonEmptyText-}
-                   {-} deriving (Eq, Show, Read, Generic)-}
 
 data SchemaType
     = StringT
@@ -162,27 +142,3 @@ data SchemaType
     | NullT
     | AnyT
     deriving (Eq, Show, Read, Generic)
-
-
-data ValidJSONKey
-
-instance HaskVerdict ValidJSONKey Text.Text where
-    haskVerdict _ = check (\x -> Text.foldr go Continue x /= Bad)
-                          "Should have escaped single quotes"
-     where
-       go _ Bad        = Bad
-       go '\\' _       = Escaped
-       go '\'' Escaped = Continue
-       go '\'' _       = Bad
-       go _ _          = Continue
-
-data C = Continue | Escaped | Bad
-    deriving (Eq, Show, Read)
-
-type JSONKey = Validated ValidJSONKey Text.Text
-newtype JsonSpec = JsonSpec
-  { unspec :: Map.Map JSONKey (Either [JsonConstraint Text.Text] JsonSpec) }
-  deriving (Eq, Show, Read)
-
-instance ToJSON JsonSpec where
-    toJSON = undefined

@@ -44,11 +44,11 @@ Instead, with `verdict` you can do this:
 type NonEmptyList a = Validated (Not (Length 0)) [a]
 ~~~
 
-The smart constructor comes for free as `val`. Specialized for clarity:
+The smart constructor comes for free as `validate`. Specialized for clarity:
 
 ~~~ {.haskell}
 mkNonEmpty :: [a] -> Either ErrorTree (NonEmptyList a)
-mkNonEmpty = val
+mkNonEmpty = validate
 ~~~
 
 The `Read` instance also comes for free, and checks for validity:

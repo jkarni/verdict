@@ -1,29 +1,37 @@
-module Verdict ( HaskVerdict(..)
-               , val
-               , getVal
-               , Validated
-               , Implies
-               , Implies'
-               , Or
-               , (:&&)
-               , (:||)
-               , Not
-               , Minimum
-               , Maximum
-               , MaxLength
-               , MinLength
-               , Length
-               , MultipleOf
-               , HasElem
-               , ErrorTree
-               , ErrorTree'(..)
-               , unsafeCoerceVal
-               , check
-               , checkWith
-               , KnownVal(..)
-               , Failure(..)
-               , ApplicativeError(..)
-               ) where
+module Verdict
+    (
+
+    -- * Essentials
+      Validated
+    , validate
+    , getVal
+    , unsafeCoerceVal
+    , check
+    , checkWith
+    , HaskVerdict(..)
+    , Implies
+    , Implies'
+    , KnownVal(..)
+    , (|.)
+
+    -- * Verdict Terms
+    , (:&&)
+    , (:||)
+    , Not
+    , Minimum
+    , Maximum
+    , MaxLength
+    , MinLength
+    , Length
+    , MultipleOf
+    , HasElem
+
+    -- * Errors
+    , ErrorTree
+    , ErrorTree'(..)
+    , Failure(..)
+    , ApplicativeError(..)
+    ) where
 
 import           Verdict.Class
 import           Verdict.Failure

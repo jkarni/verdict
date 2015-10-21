@@ -1,13 +1,13 @@
+{-# LANGUAGE DeriveAnyClass    #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveAnyClass #-}
 module Verdict.JSON.Types where
 
 import           Data.Aeson
-import qualified Data.Map  as Map
-import Data.Maybe
+import qualified Data.Map     as Map
+import           Data.Maybe
 import           Data.Monoid
-import qualified Data.Text as Text
-import           Data.Vector (fromList)
+import qualified Data.Text    as Text
+import           Data.Vector  (fromList)
 import           GHC.Generics (Generic)
 
 data NumericT = JSONInteger | JSONNumeric
@@ -59,8 +59,8 @@ instance ToJSON ObjectSchema where
     toJSON os = object [
         "properties"           .= toJSON (snd <$> properties os)
       , "required"             .= Array (String <$> fromList reqs)
-      , "additionalProperties" .= toJSON (additionalProperties os)
-      , "patternProperties"    .= toJSON (patternProperties os)
+      {-, "additionalProperties" .= toJSON (additionalProperties os)-}
+      {-, "patternProperties"    .= toJSON (patternProperties os)-}
       ]
       where reqs = Map.keys $ Map.filter ((== Required) . fst) $ properties os
 
@@ -131,14 +131,3 @@ data SchemaVersion = Draft4
 
 data Required = Required | NotRequired
   deriving (Eq, Show, Read, Generic)
-
-data SchemaType
-    = StringT
-    | NumberT
-    | IntegerT
-    | BooleanT
-    | ObjectT
-    | ArrayT SchemaType
-    | NullT
-    | AnyT
-    deriving (Eq, Show, Read, Generic)

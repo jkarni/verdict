@@ -29,7 +29,7 @@ fromJSONSpec = describe "FromJSON instance" $ do
     e `shouldContain` "Not a multiple of 2"
 
   it "parses valid values" $ do
-    let (Right expected) = val 4
+    let (Right expected) = validate 4
     (decode "4" :: Maybe EvenInt) `shouldBe` Just expected
 
 specSpec :: Spec

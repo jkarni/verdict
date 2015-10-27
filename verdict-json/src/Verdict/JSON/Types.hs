@@ -78,11 +78,12 @@ instance Monoid NumericSchema where
                                   }
 
 instance ToJSON NumericSchema where
-    toJSON ns = object [
-        "multipleOf" .= toJSON (multipleOf ns)
-      , "maximum"    .= toJSON (unMax $ fromMaybe maxBound $ maximum' ns)
-      , "minimum"    .= toJSON (unMin $ fromMaybe minBound $ minimum' ns)
-      ]
+    toJSON ns = object $ catMaybes go
+      where
+        go = [ ("multipleOf" .=) <$> (toJSON <$> listToMaybe (multipleOf ns))
+             , ("maximum"    .=) <$> (toJSON . unMax <$> maximum' ns)
+             , ("minimum"    .=) <$> (toJSON . unMin <$> minimum' ns)
+             ]
 
 newtype Max = Max { unMax :: Int}
     deriving (Eq, Show, Bounded, Ord, Read, Generic)

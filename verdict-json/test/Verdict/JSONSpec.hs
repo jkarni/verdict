@@ -3,11 +3,13 @@
 module Verdict.JSONSpec (spec) where
 
 import           Data.Aeson
+import           Data.Foldable (toList)
 import qualified Data.Map     as Map
+import qualified Data.HashMap.Strict as HashMap
 import           Data.Proxy
 import           Data.Vector  (fromList)
 import           GHC.Generics (Generic)
-import           Test.Hspec   (Spec, describe, it, shouldBe, shouldContain)
+import           Test.Hspec   (Spec, describe, it, shouldBe, shouldContain, context)
 import           Verdict
 
 import           Verdict.JSON
@@ -33,27 +35,32 @@ fromJSONSpec = describe "FromJSON instance" $ do
     (decode "4" :: Maybe EvenInt) `shouldBe` Just expected
 
 specSpec :: Spec
-specSpec = describe "Spec" $ do
+specSpec = describe "AnySchema" $ do
 
-  it "has a ToJSON instance that is in JSON Schema format" $ do
+  context "ToJSON instance" $ do
+    let (Object jspec)        = toJSON $ jsonSchema (Proxy :: Proxy Person)
+        (Just (Object props)) = HashMap.lookup "properties" jspec
+        (Just (Array reqs))   = HashMap.lookup "required" jspec
+        (Just (Object ageO))  = HashMap.lookup "age" props
+        (Just (Object nameO)) = HashMap.lookup "name" props
 
-    let props = object [ "name" .= object [ "type"      .= String "string"
-                                          , "minLength" .= Number 1
-                                          , "maxLength" .= Number 100
-                                          ]
-                       , "age"  .= object [ "type"    .= String "integer"
-                                          , "minimum" .= Number 0
-                                          , "maximum" .= Number 200
-                                          ]
-                       ]
-    let expected = object [ "properties" .= props
-                          , "required"   .= Array (fromList [ String "name"
-                                                            , String "age"
-                                                            ])
-                          ]
-    let jspec = jsonSchema (Proxy :: Proxy Person)
-    print $ encode jspec
-    toJSON jspec `shouldBe` expected
+    it "lists required properties " $ do
+      toList reqs `shouldContain` [String "name"]
+      toList reqs `shouldContain` [String "age"]
+
+    it "contains the outermost type" $ do
+      HashMap.lookup "type" jspec `shouldBe` Just (String "object")
+
+    it "contains the nested types" $ do
+      HashMap.lookup "type" nameO `shouldBe` Just (String "string")
+      HashMap.lookup "type" ageO  `shouldBe` Just (String "number")
+
+    it "contains the nested constraints" $ do
+      HashMap.lookup "minLength" nameO `shouldBe` Just (Number 1)
+      HashMap.lookup "maxLength" nameO `shouldBe` Just (Number 100)
+      HashMap.lookup "minimum" ageO `shouldBe` Just (Number 0)
+      HashMap.lookup "maximum" ageO `shouldBe` Just (Number 200)
+
 
 
 type EvenInt = Validated (MultipleOf 2) Int

@@ -3,12 +3,13 @@
 module Verdict.JSON.Types where
 
 import           Data.Aeson
-import qualified Data.Map     as Map
+import qualified Data.HashMap.Strict as HashMap
+import qualified Data.Map            as Map
 import           Data.Maybe
 import           Data.Monoid
-import qualified Data.Text    as Text
-import           Data.Vector  (fromList)
-import           GHC.Generics (Generic)
+import qualified Data.Text           as Text
+import           Data.Vector         (fromList)
+import           GHC.Generics        (Generic)
 
 data NumericT = JSONInteger | JSONNumeric
   deriving (Eq, Show, Read, Generic)
@@ -29,9 +30,12 @@ instance Monoid AnySchema where
     _            `mappend` _            = error "must be same constructor"
 
 instance ToJSON AnySchema where
-    toJSON (ObjectS os)  = toJSON os
-    toJSON (NumericS ns) = toJSON ns
-    toJSON (StringS ss)  = toJSON ss
+    toJSON (ObjectS os)  = let (Object o) = toJSON os
+                           in Object $ HashMap.insert "type" (String "object") o
+    toJSON (NumericS ns) = let (Object o) = toJSON ns
+                           in Object $ HashMap.insert "type" (String "number") o
+    toJSON (StringS ss)  = let (Object o) = toJSON ss
+                           in Object $ HashMap.insert "type" (String "string") o
     toJSON EmptyS        = object []
 
 data Either' a b = Left' a | Right' b

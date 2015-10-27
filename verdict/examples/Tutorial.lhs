@@ -73,7 +73,7 @@ safeHead = head . getVal
 Now, if we have another type:
 
 ~~~ {.haskell}
-type ReasonableList a = Validated (Minimum 1 :&& Maximum 100) [a]
+type ReasonableList a = Validated (MinLength 1 :&& MaxLength 100) [a]
 ~~~
 
 Our function `safeHead` will typecheck when given either a `ReasonableList` or

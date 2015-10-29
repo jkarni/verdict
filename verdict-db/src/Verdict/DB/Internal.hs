@@ -1,5 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE GADTs #-}
 module Verdict.DB.Internal where
 
 import Data.Proxy
@@ -25,13 +26,19 @@ instance (HaskVerdict c v) => DBVerdict c v where
       where p = Proxy :: Proxy c
     query (ts, fs) vec = [ unsafeValidated (vec V.! i) | i <- ts ]
 
--- | Get a secondary key index by type
-class HasIndex c v i where
-    getIndex :: Proxy c -> i -> Index c v
+-- Gets the first occurrence of a 'c'-index in the HList.
+class HOccurs c cs v where
+    hOccurrence :: Proxy c -> HList cs v -> Index c v
 
-instance (i ~ Index c v) => HasIndex c v i where
-    getIndex _ = id
+instance HOccurs x (x ': xs) v where
+    hOccurrence _ (HCons i _) = i
 
+instance (HOccurs x xs v) => HOccurs x (y ': xs) v where
+    hOccurrence p (HCons i xs) = hOccurrence p xs
+
+data HList xs v where
+    HNil :: HList '[] v
+    HCons :: DBVerdict c v => Index c v -> HList cs v -> HList (c ': cs) v
 {-
 instance (DBVerdict c v, DBVerdict cs v) => DB (c ': cs) v where
     type Index (c ': cs) v = (Index c v, Index cs v)

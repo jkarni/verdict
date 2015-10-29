@@ -23,7 +23,10 @@ insert val db = DB { dbData = V.snoc (dbData db) val
                    , dbIxs = insertAll (V.length (dbData db), val) (dbIxs db)
                    }
 
-
+-- >>> query eg :: [Validated (Length 5) [Int])
+-- [Validated {getVal = [1,2,3,4,5]}]
+eg :: DB '[Length 5] [Int]
+eg = insert [1..10] $ insert [1..5] empty
 ------------------------------------------------------------------------------
 
 

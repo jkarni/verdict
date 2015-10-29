@@ -5,6 +5,7 @@ module Verdict.Val where
 import           Control.Monad.Fix
 import           Control.Monad.Zip
 import           Data.Coerce     (Coercible, coerce)
+import           Data.Either (isRight)
 import           Data.Foldable
 import           Data.Proxy
 import           Data.String     (IsString (..))
@@ -77,7 +78,6 @@ instance (HaskVerdict c v, IsString v) => IsString (Validated c v) where
     fromString = force . validate . fromString
       where force = either (error . show) id
 
-
 -- | Constructs a @Validated c a@ from an @a@ if @a@ matches the constraints;
 -- throws an error with a description of precise constraints not satisfied
 -- otherwise.
@@ -93,6 +93,15 @@ validate a = case haskVerdict (Proxy :: Proxy c) a of
 unsafeCoerceVal :: Validated c a -> Validated c' a
 unsafeCoerceVal = coerce
 
+-- | Safely coerce a 'Validated' to a set of constraints implied by the
+-- original ones.
+coerceVal :: (c1 `Implies` c2) => Validated c1 a -> Validated c2 a
+coerceVal = coerce
+
+-- | Don't really validate
+unsafeValidated :: a -> Validated c a
+unsafeValidated = Validated
+
 protect :: ( ApplicativeError (String, ErrorTree) m
            , HaskVerdict c a
            ) => Proxy c -> String -> (a -> b) -> a -> m b
@@ -106,6 +115,10 @@ checkWith :: forall m c a . (ApplicativeError ErrorTree m, HaskVerdict c a)
           => a -> Proxy c -> m a
 checkWith v _ = getVal <$> v'
   where v' = validate v :: ApplicativeError ErrorTree m => m (Validated c a)
+
+isValid :: forall c a . (HaskVerdict c a) => Proxy c -> a -> Bool
+isValid v = isRight . (`checkWith` v)
+
 
 -- | Function composition. Typechecks if the result of applying the first
 -- function has a constraint that implies the constraint of the argument of the

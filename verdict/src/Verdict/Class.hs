@@ -38,18 +38,6 @@ instance HaskVerdict 'True a where
     haskVerdict _ _ = Nothing
 
 ------------------------------------------------------------------------------
--- * Datatype Representation Terms
-------------------------------------------------------------------------------
-
-{-instance ( G.Generic a ) => HaskVerdict (a :* b) r where-}
-    {-haskVerdict _ x = foldM (G.hcollapse . G.hap r $ G.from x)-}
-      {-where pa = Proxy :: Proxy a-}
-            {-pb = Proxy :: Proxy b-}
-            {-v1 = G.Fn $ \(G.I n) -> G.K (haskVerdict pa n)-}
-            {-v2 = G.Fn $ \(G.I n) -> G.K (haskVerdict pb n)-}
-            {-r  = (v1 G.:* v2 G.:* G.Nil) G.:* G.Nil-}
-
-------------------------------------------------------------------------------
 -- * Other Base Terms
 ------------------------------------------------------------------------------
 instance HaskVerdict () a where

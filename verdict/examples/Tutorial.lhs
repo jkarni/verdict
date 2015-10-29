@@ -1,4 +1,7 @@
 # Verdict
+
+*Very experimental!*
+
 ~~~ {.haskell}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}

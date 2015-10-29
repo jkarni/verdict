@@ -23,24 +23,6 @@ insert val db = DB { dbData = V.snoc (dbData db) val
                    , dbIxs = insertAll (V.length (dbData db), val) (dbIxs db)
                    }
 
--- Query on any index:
---
--- >>> query eg :: [Validated (Length 5) [Int])
--- [Validated {getVal = [1,2,3,4,5]}]
--- >>> query eg :: [Validated (Length 10) [Int])
--- [Validated {getVal = [1,2,3,4,5,6,7,8,9,10]}]
---
--- Get a type error if it's not an index:
--- >>> query eg :: [Validated (Length 7) [Int])
-{- <interactive>:5:1:
-    No instance for (HOccurs (Length 7) '[] [Int])
-      arising from a use of ‘query’
-    In the expression: query eg :: [Validated (Length 7) [Int]]
-    In an equation for ‘it’:
-        it = query eg :: [Validated (Length 7) [Int]]
--}
-eg :: DB '[Length 5, Length 10] [Int]
-eg = insert [1..10] $ insert [1..5] empty
 ------------------------------------------------------------------------------
 
 

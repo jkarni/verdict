@@ -43,13 +43,13 @@ instance HaskVerdict 'True a where
 instance HaskVerdict () a where
     haskVerdict _ = const Nothing
 
-instance (Ord b, Show b, KnownVal a b) => HaskVerdict (Maximum a) b where
+instance (Ord b, Num b, Show b, KnownNat a) => HaskVerdict (Maximum a) b where
     haskVerdict _ = check (<= p) ("Should be less than " <> showT p)
-      where p = knownVal (Proxy :: Proxy a)
+      where p = fromInteger $ natVal (Proxy :: Proxy a)
 
-instance (Ord b, Show b, KnownVal a b) => HaskVerdict (Minimum a) b where
+instance (Ord b, Num b, Show b, KnownNat a) => HaskVerdict (Minimum a) b where
     haskVerdict _ = check (>= p) ("Should be more than " <> showT p)
-      where p = knownVal (Proxy :: Proxy a)
+      where p = fromInteger $ natVal (Proxy :: Proxy a)
 
 instance (Foldable f, Show (f b), KnownNat a)
        => HaskVerdict (MaxLength a) (f b) where
@@ -61,13 +61,13 @@ instance (Foldable f, Show (f b), KnownNat a)
        => HaskVerdict (MinLength a) (f b) where
     haskVerdict _ = check ((>= p) . length)
                           ("Should be of length more than " <> showT p)
-      where p = fromInteger $ knownVal (Proxy :: Proxy a)
+      where p = fromInteger $ natVal (Proxy :: Proxy a)
 
 instance (Foldable t, KnownNat a) => HaskVerdict (Length a) (t b) where
     haskVerdict _ = check ((== p) . length) ("Should be of length " <> showT p)
       where p = fromInteger $ natVal (Proxy :: Proxy a)
 
-instance (Foldable t, Show b, Eq b, KnownVal a b)
+instance (Foldable t, Show b, Eq b, KnownVal a, KnownValType a ~ b)
     => HaskVerdict (HasElem a) (t b) where
     haskVerdict _ = check (elem p) ("Should contain " <> showT p)
       where p = knownVal (Proxy :: Proxy a)
@@ -84,8 +84,6 @@ check pred' err x = guard (not $ pred' x) >> pure (Leaf err)
 
 ------------------------------------------------------------------------------
 -- Known Val
-class KnownVal a b | a -> b where
-    knownVal :: Proxy a -> b
-
-instance KnownNat n => KnownVal n Integer where
-    knownVal = natVal
+class KnownVal a where
+    type KnownValType a
+    knownVal :: Proxy a -> KnownValType a

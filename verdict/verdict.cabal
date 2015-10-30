@@ -1,7 +1,8 @@
 name:                verdict
-version:             0.1.0.0
--- synopsis:
--- description:
+version:             0.0.0.0
+synopsis:            Validation framework
+description:
+  DO NOT USE! Unstable, not thoroughly tested.
 license:             BSD3
 license-file:        LICENSE
 author:              Julian K. Arni

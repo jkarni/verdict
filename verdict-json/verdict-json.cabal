@@ -1,7 +1,8 @@
 name:                verdict-json
-version:             0.1.0.0
--- synopsis:
--- description:
+version:             0.0.0.0
+synopsis:            JSON instances and JSON Schema for verdict
+description:
+  DO NOT USE! Unstable, not thoroughly tested.
 license:             BSD3
 license-file:        LICENSE
 author:              Julian K. Arni
@@ -29,7 +30,7 @@ library
                      , TypeFamilies
   build-depends:       base >=4.8 && <4.9
                      , aeson
-                     , verdict
+                     , verdict == 0.0.*
                      , containers
                      , text
                      , unordered-containers

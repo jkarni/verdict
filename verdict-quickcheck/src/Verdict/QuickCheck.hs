@@ -14,9 +14,16 @@ instance (HaskVerdict c v, Arbitrary v) => Arbitrary (Validated c v) where
     shrink v = rights $ validate <$> shrink (getVal v)
       where p = Proxy :: Proxy c
 
+{-
+
+        Could not deduce (Implies c2 (c1 :|| c2))
+        Could not deduce (Implies c1 (c1 :|| c2))
+
+Why not??
+
 instance (Arbitrary (Validated c1 a), Arbitrary (Validated c2 a))
     => Arbitrary (Validated (c1 :|| c2) a) where
     arbitrary = oneof [coerceVal <$> g1, coerceVal <$> g2]
       where g1 = arbitrary :: Gen (Validated c1 a)
             g2 = arbitrary :: Gen (Validated c2 a)
-
+-}

@@ -2,6 +2,8 @@ resolver: lts-3.7
 packages:
 - 'verdict'
 - 'verdict-json'
+- 'verdict-quickcheck'
+- 'verdict-db'
 extra-deps:
 - attoparsec-0.13.0.1
 - aeson-0.10.0.0

@@ -5,9 +5,13 @@ module Verdict
       Validated
     , validate
     , getVal
+    , coerceVal
     , unsafeCoerceVal
+    , unsafeValidated
+    , validateEmpty
     , check
     , checkWith
+    , isValid
     , HaskVerdict(..)
     , Implies
     , Implies'

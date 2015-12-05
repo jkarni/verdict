@@ -18,6 +18,7 @@ library
                      , Verdict.Types
                      , Verdict.Logic
                      , Verdict.Val
+                     , Verdict.Base.Internal.Monoid
   default-extensions:  TypeOperators
                      , MultiParamTypeClasses
                      , DataKinds

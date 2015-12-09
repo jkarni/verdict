@@ -1,5 +1,5 @@
-{-# LANGUAGE ConstraintKinds     #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ConstraintKinds      #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
 module Verdict.Val where
 
 import           Control.Monad.Fix
@@ -8,8 +8,6 @@ import           Data.Coerce     (Coercible, coerce)
 import           Data.Either (isRight)
 import           Data.Foldable
 import           Data.Proxy
-import           Data.String     (IsString (..))
-import           Text.Read
 
 import           Verdict.Class
 import           Verdict.Failure
@@ -23,6 +21,13 @@ import           Verdict.Types
 -- Construct a @Validated@ with 'validate'.
 newtype Validated constraint a = Validated { getVal :: a }
     deriving (Show, Eq, Ord)
+
+instance (HaskVerdict c a)
+         => Validatable (Validated c a) where
+    type Base (Validated c a) = a
+    validate a = case haskVerdict (Proxy :: Proxy c) a of
+        Nothing -> pure $ Validated a
+        Just err -> throwError err
 
 -- * Validated ()
 
@@ -70,22 +75,6 @@ instance Foldable (Validated ()) where
     sum                     = getVal
     toList (Validated x)    = [x]
 
-instance (HaskVerdict c v, Read v) => Read (Validated c v) where
-    readPrec = force . validate <$> readPrec
-      where force = either (error . show) id
-
-instance (HaskVerdict c v, IsString v) => IsString (Validated c v) where
-    fromString = force . validate . fromString
-      where force = either (error . show) id
-
--- | Constructs a @Validated c a@ from an @a@ if @a@ matches the constraints;
--- throws an error with a description of precise constraints not satisfied
--- otherwise.
-validate :: forall c a m . (HaskVerdict c a, ApplicativeError ErrorTree m)
-    => a -> m (Validated c a)
-validate a = case haskVerdict (Proxy :: Proxy c) a of
-    Nothing -> pure $ Validated a
-    Just err -> throwError err
 
 -- | Coerce a 'Validated' to another set of constraints. This is safe with
 -- respect to memory corruption, but loses the guarantee that the values

@@ -1,12 +1,40 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Verdict.Class where
 
 import           Control.Monad
 import           Data.Monoid
 import           Data.Proxy
-import qualified Data.Text     as Text
+import           Data.String     (IsString (..))
+import qualified Data.Text       as Text
 import           GHC.TypeLits
+import           Text.Read
+
+import           Verdict.Failure
 import           Verdict.Types
+
+------------------------------------------------------------------------------
+-- * Validatable
+------------------------------------------------------------------------------
+
+-- | Constructs a value of type @a@ given a value of type @Base a@ if the value
+-- matches the constraints.
+-- Throws an error with a description of precise constraints not satisfied
+-- otherwise.
+class Validatable a where
+    type Base a
+    validate :: ApplicativeError ErrorTree m => Base a -> m a
+
+instance {-# OVERLAPPABLE #-} (Validatable v, Read (Base v))
+         => Read v where
+    readPrec = force . validate <$> (readPrec :: ReadPrec (Base v))
+      where force = either (error . show) id
+
+instance {-# OVERLAPPABLE #-} (Validatable v, IsString (Base v))
+         => IsString v where
+    fromString x = force . validate $ (fromString x :: (Base v))
+      where force = either (error . show) id
+
 
 ------------------------------------------------------------------------------
 -- * HaskVerdict

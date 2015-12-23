@@ -3,15 +3,19 @@ module Verdict
 
     -- * Essentials
       Validated
+    , Verdict(..)
+    , VPred
+    , VPred'
     , validate
     , getVal
-    , coerceVal
-    , unsafeCoerceVal
-    , unsafeValidated
-    , validateEmpty
+    {-, coerceVal-}
+    {-, unsafeCoerceVal-}
+    {-, unsafeValidated-}
+    {-, validateEmpty-}
     , check
-    , checkWith
-    , isValid
+    {-, checkWith-}
+    {-, isValid-}
+    , safeCoerce
     , HaskVerdict(..)
     , Implies
     , Implies'

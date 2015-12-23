@@ -18,10 +18,10 @@ library
                      , Verdict.Types
                      , Verdict.Logic
                      , Verdict.Val
-                     , Verdict.Base.Internal.Monoid
   default-extensions:  TypeOperators
                      , MultiParamTypeClasses
                      , DataKinds
+                     , DefaultSignatures
                      , FunctionalDependencies
                      , PolyKinds
                      , ScopedTypeVariables
@@ -63,6 +63,7 @@ test-suite spec
                      , hspec == 2.*
 
 executable tutorial
+  buildable:           False
   main-is:             Tutorial.lhs
   ghc-options:         -Wall -pgmL markdown-unlit
   hs-source-dirs:      examples

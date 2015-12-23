@@ -12,10 +12,13 @@ type family Or (a :: Constraint) (b :: Constraint) :: Constraint where
     Or x () = ()
 
 type family And (a :: Constraint) (b :: Constraint) :: Constraint where
-    And () () = ()
+    And () b = ()
+    And b () = ()
 
-type family Implies (a :: k) (b :: k) :: Constraint where
+type family Implies (a :: k1) (b :: k2) :: Constraint where
     Implies a a = ()
+    Implies a () = ()
+    Implies () a = a
     Implies (a :&& b) c = (a `Implies` c) `Or`  (b `Implies` c)
     Implies (a :|| b) c = (a `Implies` c) `And` (b `Implies` c)
     Implies a (b :|| c) = (a `Implies` b) `Or`  (a `Implies` c)

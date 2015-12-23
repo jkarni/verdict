@@ -1,20 +1,53 @@
 {-# LANGUAGE ConstraintKinds     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Verdict.Val where
 
 import           Control.Monad.Fix
 import           Control.Monad.Zip
-import           Data.Coerce     (Coercible, coerce)
-import           Data.Either (isRight)
+import           Data.Coerce       (Coercible, coerce)
+import           Data.Either       (isRight)
 import           Data.Foldable
 import           Data.Proxy
-import           Data.String     (IsString (..))
+import           Data.String       (IsString (..))
 import           Text.Read
 
 import           Verdict.Class
 import           Verdict.Failure
 import           Verdict.Logic
 import           Verdict.Types
+
+validate :: forall a base m.
+           ( HaskVerdict (VPred a base) base,  Verdict a base, ApplicativeError ErrorTree m)
+         => base -> m a
+validate base = case haskVerdict (Proxy :: Proxy (VPred a base)) base of
+    Nothing  -> pure $ unsafeCoerce base
+    Just err -> throwError err
+{-# RULES "validate/safe" validate = pure #-}
+
+validateE :: ( HaskVerdict (VPred a base) base,  Verdict a base)
+          => base -> Either ErrorTree a
+validateE = validate
+
+validateF :: ( HaskVerdict (VPred a base) base,  Verdict a base)
+          => base -> Failure ErrorTree a
+validateF = validate
+
+-- | Coerce a value to another set of predicates if it's safe to do so (i.e.,
+-- if the predicates of the original value imply the predicates of the return
+-- type).
+safeCoerce :: forall a1 a2 base. (Verdict a1 base, Verdict a2 base
+            , VPred a1 base `Implies` VPred a2 base)
+           => a1 -> a2
+safeCoerce x = unsafeCoerce (unvalidate x :: base)
+
+
+type family VPred a b where
+    VPred (Validated c a) b = c :&& VPred a b
+    VPred a             a   = ()
+    VPred a             b   = VPred' a b
+
+type family VPred' a b
 
 ------------------------------------------------------------------------------
 -- * Validated
@@ -24,12 +57,10 @@ import           Verdict.Types
 newtype Validated constraint a = Validated { getVal :: a }
     deriving (Show, Eq, Ord)
 
--- * Validated ()
 
--- @Validated ()@ is the same as 'Data.Functor.Identity'; we use the same
--- instances.
-validateEmpty :: a -> Validated () a
-validateEmpty = coerce
+instance {-# OVERLAPPING #-}  Verdict (Validated c a) a
+
+-- * Validated ()
 
 instance Functor (Validated ()) where
     fmap = coerce
@@ -70,6 +101,7 @@ instance Foldable (Validated ()) where
     sum                     = getVal
     toList (Validated x)    = [x]
 
+{-
 instance (HaskVerdict c v, Read v) => Read (Validated c v) where
     readPrec = force . validate <$> readPrec
       where force = either (error . show) id
@@ -77,30 +109,6 @@ instance (HaskVerdict c v, Read v) => Read (Validated c v) where
 instance (HaskVerdict c v, IsString v) => IsString (Validated c v) where
     fromString = force . validate . fromString
       where force = either (error . show) id
-
--- | Constructs a @Validated c a@ from an @a@ if @a@ matches the constraints;
--- throws an error with a description of precise constraints not satisfied
--- otherwise.
-validate :: forall c a m . (HaskVerdict c a, ApplicativeError ErrorTree m)
-    => a -> m (Validated c a)
-validate a = case haskVerdict (Proxy :: Proxy c) a of
-    Nothing -> pure $ Validated a
-    Just err -> throwError err
-
--- | Coerce a 'Validated' to another set of constraints. This is safe with
--- respect to memory corruption, but loses the guarantee that the values
--- satisfy the predicates.
-unsafeCoerceVal :: Validated c a -> Validated c' a
-unsafeCoerceVal = coerce
-
--- | Safely coerce a 'Validated' to a set of constraints implied by the
--- original ones.
-coerceVal :: (c1 `Implies` c2) => Validated c1 a -> Validated c2 a
-coerceVal = coerce
-
--- | Don't really validate
-unsafeValidated :: a -> Validated c a
-unsafeValidated = Validated
 
 protect :: ( ApplicativeError (String, ErrorTree) m
            , HaskVerdict c a
@@ -119,6 +127,7 @@ checkWith v _ = getVal <$> v'
 isValid :: forall c a . (HaskVerdict c a) => Proxy c -> a -> Bool
 isValid v = isRight . (`checkWith` v)
 
+-}
 
 -- | Function composition. Typechecks if the result of applying the first
 -- function has a constraint that implies the constraint of the argument of the

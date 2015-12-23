@@ -1,12 +1,38 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Verdict.Class where
 
 import           Control.Monad
+import           Data.Coerce (Coercible, coerce)
 import           Data.Monoid
 import           Data.Proxy
 import qualified Data.Text     as Text
 import           GHC.TypeLits
 import           Verdict.Types
+
+------------------------------------------------------------------------------
+-- * Verdict
+------------------------------------------------------------------------------
+
+class Verdict a base | a -> base where
+    -- Function to coerce without checking constraints. The runtime
+    -- representation of @VerdictBase a@ and @a@ should be the same.
+    -- This function only gets called by @Verdict@ when it is safe to do so.
+    unsafeCoerce :: base -> a
+    default unsafeCoerce :: (Coercible base a) => base -> a
+    unsafeCoerce = coerce
+    -- Function to throw away constraints.
+    unvalidate   :: a -> base
+    default unvalidate :: (Coercible a base) => a -> base
+    unvalidate   = coerce
+
+instance {-# OVERLAPPABLE #-} (b ~ a) => Verdict a b
+
+{-instance [># OVERLAPPING #<]  (Coercible (f a) (f b), Coercible (f b) (f a), Verdict a b)-}
+    {-=> Verdict (f a) (f b) where-}
+    {-unsafeCoerce = coerce-}
+    {-unvalidate   = coerce-}
 
 ------------------------------------------------------------------------------
 -- * HaskVerdict
@@ -19,7 +45,11 @@ class HaskVerdict a b where
 -- * Logical Base Terms
 ------------------------------------------------------------------------------
 instance (HaskVerdict a r, HaskVerdict b r) => HaskVerdict (a :&& b) r where
-    haskVerdict _ x = And <$> haskVerdict pa x <*> haskVerdict pb x
+    haskVerdict _ x = case (haskVerdict pa x, haskVerdict pb x) of
+        (Nothing, Nothing) -> Nothing
+        (Just e1, Just e2) -> Just (e1 `And` e2)
+        (Just e1, Nothing) -> Just e1
+        (Nothing, Just e2) -> Just e2
       where pa = Proxy :: Proxy a
             pb = Proxy :: Proxy b
 

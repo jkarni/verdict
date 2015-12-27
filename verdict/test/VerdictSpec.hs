@@ -1,7 +1,9 @@
 {-# LANGUAGE UndecidableInstances #-}
-module VerdictSpec (spec) where
+module VerdictSpec where
 
 import Data.Either
+import Data.Proxy
+import GHC.Generics (Generic)
 import Test.Hspec
 import Verdict
 
@@ -15,6 +17,7 @@ spec = describe "Verdict" $ do
     lengthSpec
     multipleOfSpec
   safeCoerceSpec
+  predSpec
 
 maximumSpec :: Spec
 maximumSpec = describe "Maximum" $ do
@@ -91,37 +94,90 @@ multipleOfSpec :: Spec
 multipleOfSpec = describe "MultipleOf" $ do
 
   it "rejects non-multiples" $ do
-    (validate (5 :: Integer) :: Either ErrorTree (Validated (MultipleOf 2) Integer))
+    (validate 5 :: Either ErrorTree (Validated (MultipleOf 2) Integer))
         `shouldSatisfy` isLeft
 
   it "accepts multiples" $ do
-    (validate (4 :: Integer) :: Either ErrorTree (Validated (MultipleOf 2) Integer))
+    (validate 4 :: Either ErrorTree (Validated (MultipleOf 2) Integer))
         `shouldSatisfy` isRight
 
 safeCoerceSpec :: Spec
 safeCoerceSpec = describe "safeCoerce" $ do
-  let x = unsafeCoerce [1..10] :: Validated (Length 10) [Int]
+  let a = unsafeCoerce [1..10] :: Validated (Length 10) [Int]
 
   context "Validated" $ do
 
     it "accepts valid coercions" $ do
-      shouldTypeCheck (safeCoerce x :: Validated (MaxLength 20) [Int])
+      shouldTypeCheck (safeCoerce a :: Validated (MaxLength 20) [Int])
 
-  context "other datatypes" $ do
+  context "simply-polymorphic datatypes" $ do
 
     it "accepts valid coercions" $ do
-      shouldTypeCheck (safeCoerce (A x) :: A (Validated (MaxLength 20) [Int]))
+      shouldTypeCheck (safeCoerce (A a) :: A (Validated (MaxLength 20) [Int]))
 
+  {-context "non-polymorphic datatypes" $ do-}
+
+    {-it "accepts valid coercions" $ do-}
+      {-shouldTypeCheck (safeCoerce (B a) :: B)-}
+
+  {-context "connected polymorphic datatypes" $ do-}
+
+    {-it "accepts valid coercions" $ do-}
+      {-shouldTypeCheck (safeCoerce (C a) :: C (Validated (MaxLength 20) [Int]))-}
+
+  {-context "recursive polymorphic datatypes" $ do-}
+
+    {-it "accepts valid coercions" $ do-}
+      {-shouldTypeCheck (safeCoerce (DCons a DNull) :: D (Validated (MaxLength 20) [Int]))-}
+
+
+predSpec :: Spec
+predSpec = describe "GPred" $ do
+
+  let a = unsafeCoerce [1..10] :: Validated (Length 10) [Int]
+
+  context "simply-polymorphic datatypes" $ do
+
+    it "has the correct Pred" $ do
+      A a `shouldHavePred` (Proxy :: Proxy (TProd '[Length 10]))
+
+  {-context "non-polymorphic datatypes" $ do-}
+
+    {-it "has the correct Pred" $ do-}
+      {-B a `shouldHavePred` (Proxy :: Proxy (TProd '[Length 10]))-}
+
+  {-context "connected polymorphic datatypes" $ do-}
+
+    {-it "has the correct Prod" $ do-}
+      {-C a a `shouldHavePred` (Proxy :: Proxy (TProd '[Length 10, Length 10] ))-}
 
 ------------------------------------------------------------------------------
 shouldTypeCheck :: a -> Expectation
 shouldTypeCheck _ = True `shouldBe` True
 
-data A a = A { unA :: a }
-  deriving (Eq, Show)
+shouldHavePred :: (Pred a ~ c) => a -> Proxy c -> Expectation
+shouldHavePred _ _ = True `shouldBe` True
 
-type instance VPred' (A a) (A b) = VPred a b
+data A a = A { unA :: a }
+  deriving (Eq, Show, Generic)
+
+data B = B { unB :: Validated (Length 10) [Int] }
+  deriving (Eq, Show, Generic)
+
+data C a = C { c1 :: a, c2 :: a }
+  deriving (Eq, Show, Generic)
+
+data D a = DNull | DCons a (D a)
+  deriving (Eq, Show, Generic)
 
 instance (Verdict a b) => Verdict (A a) (A b) where
-  unsafeCoerce = A . unsafeCoerce . unA
-  unvalidate   = A . unvalidate . unA
+    type Pred (A a) = DefaultPred (A a)
+
+{-instance Verdict B B where-}
+    {-type Pred B = DefaultPred B-}
+
+instance (Verdict a b) => Verdict (C a) (C b) where
+    type Pred (C a) = DefaultPred (C a)
+
+{-instance (Verdict a b) => Verdict (D a) (D b) where-}
+    {-type Pred (D a) = DefaultPred (D a)-}

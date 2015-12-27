@@ -49,6 +49,7 @@ test-suite spec
   main-is:             Spec.hs
   other-modules:       VerdictSpec
   default-extensions:  DeriveFunctor
+                     , DeriveGeneric
                      , TypeOperators
                      , MultiParamTypeClasses
                      , DataKinds

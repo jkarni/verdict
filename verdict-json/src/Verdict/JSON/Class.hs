@@ -1,7 +1,10 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings   #-}
 module Verdict.JSON.Class where
 
+import qualified Data.Map as Map
 import           Data.Monoid
+import qualified Data.Text as Text
 import           Data.Proxy
 import           GHC.TypeLits
 import           Verdict
@@ -62,3 +65,32 @@ instance MkAny StringSchema where
 
 jsonSchema :: JsonSchema a => proxy a -> AnySchema
 jsonSchema = mkAny . jsonSchema'
+
+------------------------------------------------------------------------------
+-- * GJsonSchema
+------------------------------------------------------------------------------
+
+class (MkAny (JsonType a), Monoid (JsonType a)) => GJsonSchema a where
+    type GJsonType a
+    gjsonSchema' :: proxy a -> GJsonType a
+
+{-instance GJsonSchema (TRec x) where-}
+    {-type GJsonType (TRec x) = ObjectSchema-}
+    {-gjsonSchema' _ = mempty { properties-}
+
+{-type JsonTypeFromPred a where-}
+    {-JsonTypeFromPred (TRec x) = ObjectSchema-}
+
+class TRecProps (a :: [k]) where
+    tRecProps :: Proxy a -> Map.Map Text.Text (Required, AnySchema)
+
+instance TRecProps '[] where
+    tRecProps _ = Map.empty
+
+instance (KnownSymbol name, JsonSchema c, TRecProps xs)
+    => TRecProps (Rec name c ': xs) where
+    tRecProps _ = Map.insert name (Required, jsonSchema pc) $ tRecProps pxs
+      where
+        name = Text.pack $ symbolVal (Proxy :: Proxy name)
+        pc   = Proxy :: Proxy c
+        pxs  = Proxy :: Proxy xs

@@ -4,13 +4,13 @@ import Verdict.JSON.Types
 import Generics.SOP
 
 
-gJsonSchema' :: (Generic a, HasDatatypeInfo a, All2 JsonSchema (Code a))
+gJsonSchema :: (Generic a, HasDatatypeInfo a, All2 JsonSchema (Code a))
              => proxy a -> JsonType a
-gJsonSchema' p = typeInfo p
+gJsonSchema p = typeInfo p
 
-gJsonSchema'' (All2 JsonSchema xs, Singl xs) => TypeInfo xs ->
-gJsonSchema'' (ADT _ _ c)     =
-gJsonSchema'' (Newtype _ _ c) =
+gJsonSchema' (All2 JsonSchema xs, Singl xs) => JsonTypeInfo xs -> NP I xs -> K
+gJsonSchema' (ADT _ _ c)     =
+gJsonSchema' (Newtype _ _ c) =
 
 gCon :: ConstructorInfo xs ->
 gCon (Constructor cname) =

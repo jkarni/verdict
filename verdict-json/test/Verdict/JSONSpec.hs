@@ -4,15 +4,14 @@ module Verdict.JSONSpec (spec) where
 
 import           Data.Aeson
 import           Data.Foldable (toList)
-import qualified Data.Map     as Map
 import qualified Data.HashMap.Strict as HashMap
 import           Data.Proxy
-import           Data.Vector  (fromList)
 import           GHC.Generics (Generic)
 import           Test.Hspec   (Spec, describe, it, shouldBe, shouldContain, context)
 import           Verdict
 
 import           Verdict.JSON
+import           Verdict.JSON.SpecTypes
 
 spec :: Spec
 spec = describe "Verdict.JSON" $ do
@@ -23,16 +22,39 @@ spec = describe "Verdict.JSON" $ do
 fromJSONSpec :: Spec
 fromJSONSpec = describe "FromJSON instance" $ do
 
-  it "does validation when parsing" $ do
-    (decode "5" :: Maybe EvenInt) `shouldBe` Nothing
+  context "Validated" $ do
 
-  it "gives a useful error message" $ do
-    let Left e = eitherDecode "5" :: Either String EvenInt
-    e `shouldContain` "Not a multiple of 2"
+    it "does validation when parsing" $ do
+      (decode "5" :: Maybe EvenInt) `shouldBe` Nothing
 
-  it "parses valid values" $ do
-    let (Right expected) = validate 4
-    (decode "4" :: Maybe EvenInt) `shouldBe` Just expected
+    it "gives a useful error message" $ do
+      let Left e = eitherDecode "5" :: Either String EvenInt
+      e `shouldContain` "Not a multiple of 2"
+
+    it "parses valid values" $ do
+      let (Right expected) = validate 4
+      (decode "4" :: Maybe EvenInt) `shouldBe` Just expected
+
+  context "other datatypes" $ do
+
+    let x = A 5 (unsafeCoerce 2) :: A Int
+        y = A 2 (unsafeCoerce 3) :: A Int
+        z = A (unsafeCoerce 2) (unsafeCoerce 2) :: A EvenInt
+
+    it "does validation when parsing" $ do
+      (decode (encode x) :: Maybe (A EvenInt)) `shouldBe` Nothing
+
+    it "gives a useful error message for polymorphic recors" $ do
+      let Left e = eitherDecode (encode x) :: Either String (A EvenInt)
+      e `shouldContain` "Not a multiple of 2"
+
+    it "gives a useful error message for non-polymorphic recors" $ do
+      let Left e = eitherDecode (encode y) :: Either String (A EvenInt)
+      e `shouldContain` "Not a multiple of 2"
+
+    it "parses valid values" $ do
+      let Right e = eitherDecode (encode z) :: Either String (A EvenInt)
+      e `shouldBe` z
 
 specSpec :: Spec
 specSpec = describe "AnySchema" $ do
@@ -61,24 +83,21 @@ specSpec = describe "AnySchema" $ do
       HashMap.lookup "minimum" ageO `shouldBe` Just (Number 0)
       HashMap.lookup "maximum" ageO `shouldBe` Just (Number 200)
 
+genericSpec :: Spec
+genericSpec = describe "default instance" $ do
 
+  let (Object jspec) = toJSON $ jsonSchema (Proxy :: Proxy (B EvenInt))
+      (Just (Object props)) = HashMap.lookup "properties" jspec
+      (Just (Array reqs))   = HashMap.lookup "required" jspec
 
-type EvenInt = Validated (MultipleOf 2) Int
+  it "lists all required records" $ do
+    toList reqs `shouldContain` [String "unB"]
 
-type Name  = Validated (MinLength 1 :&& MaxLength 100) String
-type Age   = Validated (Minimum 0 :&& Maximum 200) Integer
+data A a = A { aa :: a, ab :: EvenInt }
+  deriving (Eq, Show, Generic, Read, FromJSON, ToJSON)
 
-data Person = Person
-    { name :: Name
-    , age  :: Age
-    } deriving (Eq, Show, Read, Generic, ToJSON)
+data B a = B { unB :: a }
+  deriving (Eq, Show, Generic, Read, FromJSON, ToJSON)
 
-instance JsonSchema Person where
-    type JsonType Person = ObjectSchema
-    jsonSchema' _ = mempty { properties = Map.fromList
-                                [ ("name", (Required, jsonSchema namep))
-                                , ("age" , (Required, jsonSchema agep ))
-                                ]
-                          }
-      where namep = Proxy :: Proxy Name
-            agep  = Proxy :: Proxy Age
+instance Verdict a b => Verdict (B a) (B b) where
+    type Pred (B a) = DefaultPred (B a)

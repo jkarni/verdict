@@ -4,8 +4,12 @@ module Verdict
     -- * Essentials
       Validated
     , Verdict(..)
-    , VPred
-    , VPred'
+    , TProd
+    , TSum
+    , TRec
+    , Rec
+    , GVerdict(..)
+    , DefaultPred
     , validate
     , getVal
     {-, coerceVal-}

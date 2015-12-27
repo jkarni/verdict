@@ -34,3 +34,10 @@ type instance Implies' (Length a) (MaxLength b) = a <= b
 type instance Implies' (Length a) (MinLength b) = b <= b
 type instance Implies' (MaxLength a) (MaxLength b) = a <= b
 type instance Implies' (MinLength a) (MinLength b) = b <= a
+type instance Implies' (TProd as) (TProd bs) = as `ZipImplies` bs
+
+-- | The first and second list have same length, and each element of the first
+-- list implies the corresponding one of the second.
+type family ZipImplies (a :: [k]) (b :: [k]) :: Constraint where
+    ZipImplies '[] '[] = ()
+    ZipImplies (a ': as) (b ': bs) = (a `Implies` b) `And` (as `ZipImplies` bs)

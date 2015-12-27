@@ -8,6 +8,7 @@ import           Data.Coerce (Coercible, coerce)
 import           Data.Monoid
 import           Data.Proxy
 import qualified Data.Text     as Text
+import           GHC.Generics
 import           GHC.TypeLits
 import           Verdict.Types
 
@@ -15,24 +16,37 @@ import           Verdict.Types
 -- * Verdict
 ------------------------------------------------------------------------------
 
+-- | Note: generally @unsafeCoerce@ and @unvalidate@ should be @coerce@, so
+-- that there is no runtime cost to these operations.
 class Verdict a base | a -> base where
+    type Pred a
     -- Function to coerce without checking constraints. The runtime
     -- representation of @VerdictBase a@ and @a@ should be the same.
     -- This function only gets called by @Verdict@ when it is safe to do so.
     unsafeCoerce :: base -> a
-    default unsafeCoerce :: (Coercible base a) => base -> a
-    unsafeCoerce = coerce
+    default unsafeCoerce :: (Generic a, Generic base, GVerdict (Rep a) (Rep base))
+                         => base -> a
+    unsafeCoerce = defaultUnsafeCoerce
     -- Function to throw away constraints.
     unvalidate   :: a -> base
-    default unvalidate :: (Coercible a base) => a -> base
-    unvalidate   = coerce
+    default unvalidate :: (Generic a, Generic base, GVerdict (Rep a) (Rep base))
+                        => a -> base
+    unvalidate = defaultUnvalidate
 
-instance {-# OVERLAPPABLE #-} (b ~ a) => Verdict a b
 
-{-instance [># OVERLAPPING #<]  (Coercible (f a) (f b), Coercible (f b) (f a), Verdict a b)-}
-    {-=> Verdict (f a) (f b) where-}
-    {-unsafeCoerce = coerce-}
-    {-unvalidate   = coerce-}
+instance Verdict Int Int where
+    type Pred Int = ()
+instance Verdict Double Double where
+    type Pred Double = ()
+instance Verdict Float Float where
+    type Pred Float = ()
+instance Verdict Char Char where
+    type Pred Char = ()
+instance Verdict Bool Bool where
+    type Pred Bool = ()
+instance Verdict () () where
+    type Pred () = ()
+
 
 ------------------------------------------------------------------------------
 -- * HaskVerdict
@@ -106,6 +120,10 @@ instance (KnownNat n, Integral a) => HaskVerdict (MultipleOf n) a where
     haskVerdict _ = check (\x -> (toInteger x `rem` p) == 0) ("Not a multiple of " <> showT p)
       where p = natVal (Proxy :: Proxy n)
 
+------------------------------------------------------------------------------
+-- * Accessors
+------------------------------------------------------------------------------
+-- instance HaskVerdict (x ': xs) v
 showT :: Show a => a -> Text.Text
 showT = Text.pack . show
 
@@ -119,3 +137,52 @@ class KnownVal a b | a -> b where
 
 instance KnownNat n => KnownVal n Integer where
     knownVal = natVal
+
+------------------------------------------------------------------------------
+-- Generics
+------------------------------------------------------------------------------
+class GVerdict (a :: * -> *) (b :: * -> *) | a -> b where
+    type GPred a
+    gunsafeCoerce :: b x -> a x
+    gunvalidate   :: a x -> b x
+
+instance GVerdict U1 U1 where
+    type GPred U1 = ()
+    gunsafeCoerce = id
+    gunvalidate   = id
+
+instance (GVerdict a a', GVerdict b b') => GVerdict (a :*: b) (a' :*: b') where
+    type GPred (a :*: b) = TProd (a ': UnProd (GPred b))
+    gunsafeCoerce (a :*: b) = gunsafeCoerce a :*: gunsafeCoerce b
+    gunvalidate   (a :*: b) = gunvalidate a   :*: gunvalidate b
+
+instance (GVerdict a a', GVerdict b b') => GVerdict (a :+: b) (a' :+: b') where
+    type GPred (a :+: b) = TSum (a ': UnSum (GPred b))
+    gunsafeCoerce (L1 a) = L1 $ gunsafeCoerce a
+    gunsafeCoerce (R1 a) = R1 $ gunsafeCoerce a
+    gunvalidate   (L1 a) = L1 $ gunvalidate a
+    gunvalidate   (R1 a) = R1 $ gunvalidate a
+
+instance (GVerdict a a') => GVerdict (M1 i c a) (M1 i c a') where
+    type GPred (M1 i c a) = GPred a
+    gunsafeCoerce (M1 a) = M1 $ gunsafeCoerce a
+    gunvalidate   (M1 a) = M1 $ gunvalidate a
+
+instance (Verdict a a') => GVerdict (K1 i a) (K1 i a') where
+    type GPred (K1 i a) = TProd '[Pred a]
+    gunsafeCoerce (K1 a) = K1 $ unsafeCoerce a
+    gunvalidate   (K1 a) = K1 $ unvalidate a
+
+type family UnProd a where
+    UnProd (TProd a) = a
+
+type family UnSum a where
+    UnSum (TSum a) = a
+
+defaultUnsafeCoerce :: (Generic a, Generic x, GVerdict (Rep a) (Rep x)) => x -> a
+defaultUnsafeCoerce = to . gunsafeCoerce . from
+
+defaultUnvalidate :: (Generic a, Generic x, GVerdict (Rep a) (Rep x)) => a -> x
+defaultUnvalidate = to . gunvalidate . from
+
+type DefaultPred a = GPred (Rep a)

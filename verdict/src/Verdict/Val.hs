@@ -18,18 +18,18 @@ import           Verdict.Logic
 import           Verdict.Types
 
 validate :: forall a base m.
-           ( HaskVerdict (VPred a base) base,  Verdict a base, ApplicativeError ErrorTree m)
+           ( HaskVerdict (Pred a) base,  Verdict a base, ApplicativeError ErrorTree m)
          => base -> m a
-validate base = case haskVerdict (Proxy :: Proxy (VPred a base)) base of
+validate base = case haskVerdict (Proxy :: Proxy (Pred a)) base of
     Nothing  -> pure $ unsafeCoerce base
     Just err -> throwError err
 {-# RULES "validate/safe" validate = pure #-}
 
-validateE :: ( HaskVerdict (VPred a base) base,  Verdict a base)
+validateE :: ( HaskVerdict (Pred a) base,  Verdict a base)
           => base -> Either ErrorTree a
 validateE = validate
 
-validateF :: ( HaskVerdict (VPred a base) base,  Verdict a base)
+validateF :: ( HaskVerdict (Pred a) base,  Verdict a base)
           => base -> Failure ErrorTree a
 validateF = validate
 
@@ -37,28 +37,24 @@ validateF = validate
 -- if the predicates of the original value imply the predicates of the return
 -- type).
 safeCoerce :: forall a1 a2 base. (Verdict a1 base, Verdict a2 base
-            , VPred a1 base `Implies` VPred a2 base)
+            , Pred a1 `Implies` Pred a2)
            => a1 -> a2
 safeCoerce x = unsafeCoerce (unvalidate x :: base)
 
 
-type family VPred a b where
-    VPred (Validated c a) b = c :&& VPred a b
-    VPred a             a   = ()
-    VPred a             b   = VPred' a b
-
-type family VPred' a b
+instance Verdict (Validated c a) a where
+    type Pred (Validated c a) = c
+    unsafeCoerce = coerce
+    unvalidate   = coerce
 
 ------------------------------------------------------------------------------
 -- * Validated
 ------------------------------------------------------------------------------
 -- | A generalization of smart constructors with opaque types.
 -- Construct a @Validated@ with 'validate'.
-newtype Validated constraint a = Validated { getVal :: a }
+newtype Validated (constraint :: *) a = Validated { getVal :: a }
     deriving (Show, Eq, Ord)
 
-
-instance {-# OVERLAPPING #-}  Verdict (Validated c a) a
 
 -- * Validated ()
 
@@ -101,7 +97,6 @@ instance Foldable (Validated ()) where
     sum                     = getVal
     toList (Validated x)    = [x]
 
-{-
 instance (HaskVerdict c v, Read v) => Read (Validated c v) where
     readPrec = force . validate <$> readPrec
       where force = either (error . show) id
@@ -110,6 +105,7 @@ instance (HaskVerdict c v, IsString v) => IsString (Validated c v) where
     fromString = force . validate . fromString
       where force = either (error . show) id
 
+{-
 protect :: ( ApplicativeError (String, ErrorTree) m
            , HaskVerdict c a
            ) => Proxy c -> String -> (a -> b) -> a -> m b

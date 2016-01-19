@@ -13,6 +13,8 @@ module Verdict
     , checkWith
     , isValid
     , HaskVerdict(..)
+    , Verdict(..)
+    , GVerdict(..)
     , Implies
     , Implies'
     , KnownVal(..)

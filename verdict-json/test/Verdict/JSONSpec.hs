@@ -7,7 +7,6 @@ import           Data.Foldable (toList)
 import qualified Data.Map     as Map
 import qualified Data.HashMap.Strict as HashMap
 import           Data.Proxy
-import           Data.Vector  (fromList)
 import           GHC.Generics (Generic)
 import           Test.Hspec   (Spec, describe, it, shouldBe, shouldContain, context)
 import           Verdict
@@ -23,16 +22,25 @@ spec = describe "Verdict.JSON" $ do
 fromJSONSpec :: Spec
 fromJSONSpec = describe "FromJSON instance" $ do
 
-  it "does validation when parsing" $ do
-    (decode "5" :: Maybe EvenInt) `shouldBe` Nothing
+  context "Validated" $ do
 
-  it "gives a useful error message" $ do
-    let Left e = eitherDecode "5" :: Either String EvenInt
-    e `shouldContain` "Not a multiple of 2"
+    it "does validation when parsing" $ do
+      (decode "5" :: Maybe EvenInt) `shouldBe` Nothing
+      (decode "4" :: Maybe EvenInt) `shouldBe` Just (unsafeValidated 4)
 
-  it "parses valid values" $ do
-    let (Right expected) = validate 4
-    (decode "4" :: Maybe EvenInt) `shouldBe` Just expected
+    it "gives a useful error message" $ do
+      let Left e = eitherDecode "5" :: Either String EvenInt
+      e `shouldContain` "Not a multiple of 2"
+
+    it "parses valid values" $ do
+      let (Right expected) = validate 4
+      (decode "4" :: Maybe EvenInt) `shouldBe` Just expected
+
+  context "Generic" $ do
+
+    it "does validation when parsing" $ do
+      (decode (encode badPerson) :: Maybe Person) `shouldBe` Nothing
+      (decode (encode goodPerson) :: Maybe Person) `shouldBe` Just goodPerson
 
 specSpec :: Spec
 specSpec = describe "AnySchema" $ do
@@ -71,7 +79,14 @@ type Age   = Validated (Minimum 0 :&& Maximum 200) Integer
 data Person = Person
     { name :: Name
     , age  :: Age
-    } deriving (Eq, Show, Read, Generic, ToJSON)
+    } deriving (Eq, Show, Read, Generic, ToJSON, FromJSON)
+
+badPerson :: Person
+badPerson = Person { name = unsafeValidated "", age = unsafeValidated 250 }
+
+goodPerson :: Person
+goodPerson = Person { name = unsafeValidated "Kilroy"
+                    , age = unsafeValidated 20 }
 
 instance JsonSchema Person where
     type JsonType Person = ObjectSchema

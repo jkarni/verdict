@@ -16,3 +16,4 @@ gCon :: ConstructorInfo xs ->
 gCon (Constructor cname) =
 gCon (Record _ finfo) =
 gCon (Infix _ _ _) =
+

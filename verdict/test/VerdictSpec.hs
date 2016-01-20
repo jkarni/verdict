@@ -15,6 +15,7 @@ spec = describe "Verdict" $ do
     minLengthSpec
     lengthSpec
     multipleOfSpec
+    readSpec
 
 maximumSpec :: Spec
 maximumSpec = describe "Maximum" $ do
@@ -98,4 +99,16 @@ multipleOfSpec = describe "MultipleOf" $ do
     (validate 4 :: Either ErrorTree (Validated (MultipleOf 2) Integer))
         `shouldSatisfy` isRight
 
+readSpec :: Spec
+readSpec = describe "read Validated" $ do
+
+  it "is a inverse of show" $ do
+    let x = unsafeValidated 4 :: Validated (MultipleOf 2) Integer
+    read (show x) `shouldBe` x
+    show (read $ show x :: Validated (MultipleOf 2) Integer) `shouldBe` show x
+
+  it "rejects invalid values" $ do
+
+    evaluate (read "5" :: (Validated (MultipleOf 2) Integer))
+      `shouldThrow` anyErrorCall
 

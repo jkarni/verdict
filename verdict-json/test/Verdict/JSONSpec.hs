@@ -3,20 +3,18 @@
 module Verdict.JSONSpec (spec) where
 
 import           Data.Aeson
-import           Data.Foldable (toList)
-import qualified Data.Map     as Map
-import qualified Data.HashMap.Strict as HashMap
 import           Data.Proxy
 import           GHC.Generics (Generic)
 import           Test.Hspec   (Spec, describe, it, shouldBe, shouldContain, context)
 import           Verdict
 
-import           Verdict.JSON
+import           Verdict.JSON ()
+import Data.Swagger
+import Control.Lens
 
 spec :: Spec
 spec = describe "Verdict.JSON" $ do
     fromJSONSpec
-    specSpec
     genericSpec
 
 
@@ -50,62 +48,25 @@ fromJSONSpec = describe "FromJSON instance" $ do
       (decode (encode goodPerson) :: Maybe Person) `shouldBe` Just goodPerson
 
 
-specSpec :: Spec
-specSpec = describe "AnySchema" $ do
-
-  context "ToJSON instance" $ do
-    let (Object jspec)        = toJSON $ jsonSchema (Proxy :: Proxy Person)
-        (Just (Object props)) = HashMap.lookup "properties" jspec
-        (Just (Array reqs))   = HashMap.lookup "required" jspec
-        (Just (Object ageO))  = HashMap.lookup "age" props
-        (Just (Object nameO)) = HashMap.lookup "name" props
-
-    it "lists required properties " $ do
-      toList reqs `shouldContain` [String "name"]
-      toList reqs `shouldContain` [String "age"]
-
-    it "contains the outermost type" $ do
-      HashMap.lookup "type" jspec `shouldBe` Just (String "object")
-
-    it "contains the nested types" $ do
-      HashMap.lookup "type" nameO `shouldBe` Just (String "string")
-      HashMap.lookup "type" ageO  `shouldBe` Just (String "number")
-
-    it "contains the nested constraints" $ do
-      HashMap.lookup "minLength" nameO `shouldBe` Just (Number 1)
-      HashMap.lookup "maxLength" nameO `shouldBe` Just (Number 100)
-      HashMap.lookup "minimum" ageO `shouldBe` Just (Number 0)
-      HashMap.lookup "maximum" ageO `shouldBe` Just (Number 200)
-
-
 genericSpec :: Spec
-genericSpec = describe "Generic JsonSchema" $ do
+genericSpec = describe "Generic ToSchema" $ do
 
-  context "ToJSON instance" $ do
+  let jspec = toSchema (Proxy :: Proxy Person)
 
+  it "has the required properties list" $ do
+    (jspec ^. schemaRequired) `shouldBe` ["name", "age"]
 
-    let (Object jspec)        = toJSON $ jsonSchema (Proxy :: Proxy Person')
-        (Just (Object props)) = HashMap.lookup "properties" jspec
-        (Just (Array reqs))   = HashMap.lookup "required" jspec
-        (Just (Object ageO))  = HashMap.lookup "ageG" props
-        (Just (Object nameO)) = HashMap.lookup "nameG" props
-
-    it "lists required properties " $ do
-      toList reqs `shouldContain` [String "nameG"]
-      toList reqs `shouldContain` [String "ageG"]
-
-    it "contains the outermost type" $ do
-      HashMap.lookup "type" jspec `shouldBe` Just (String "object")
-
-    it "contains the nested types" $ do
-      HashMap.lookup "type" nameO `shouldBe` Just (String "string")
-      HashMap.lookup "type" ageO  `shouldBe` Just (String "number")
-
-    it "contains the nested constraints" $ do
-      HashMap.lookup "minLength" nameO `shouldBe` Just (Number 1)
-      HashMap.lookup "maxLength" nameO `shouldBe` Just (Number 100)
-      HashMap.lookup "minimum" ageO `shouldBe` Just (Number 0)
-      HashMap.lookup "maximum" ageO `shouldBe` Just (Number 200)
+  it "has the nested properties" $ do
+    let Just (Inline i1) = jspec ^. schemaProperties . at "age"
+    (i1 ^. schemaParamSchema . paramSchemaMaximum)
+      `shouldBe` Just 200.0
+    (i1 ^. schemaParamSchema . paramSchemaMinimum)
+      `shouldBe` Just 0.0
+    let Just (Inline i2) = jspec ^. schemaProperties . at "name"
+    (i2 ^. schemaParamSchema . paramSchemaMinLength)
+      `shouldBe` Just 1
+    (i2 ^. schemaParamSchema . paramSchemaMaxLength)
+      `shouldBe` Just 100
 
 type EvenInt = Validated (MultipleOf 2) Int
 
@@ -115,12 +76,7 @@ type Age   = Validated (Minimum 0 :&& Maximum 200) Integer
 data Person = Person
     { name :: Name
     , age  :: Age
-    } deriving (Eq, Show, Read, Generic, ToJSON, FromJSON)
-
-data Person' = Person'
-    { nameG :: Name
-    , ageG  :: Age
-    } deriving (Eq, Show, Read, Generic, ToJSON, FromJSON, JsonSchema)
+    } deriving (Eq, Show, Read, Generic, ToJSON, FromJSON, ToSchema)
 
 badPerson :: Person
 badPerson = Person { name = unsafeValidated "", age = unsafeValidated 250 }
@@ -128,13 +84,3 @@ badPerson = Person { name = unsafeValidated "", age = unsafeValidated 250 }
 goodPerson :: Person
 goodPerson = Person { name = unsafeValidated "Kilroy"
                     , age = unsafeValidated 20 }
-
-instance JsonSchema Person where
-    jsonSchema _ = ObjectS $ mempty { properties = Map.fromList
-                                [ ("name", (Required, jsonSchema namep))
-                                , ("age" , (Required, jsonSchema agep ))
-                                ]
-                          }
-      where namep = Proxy :: Proxy Name
-            agep  = Proxy :: Proxy Age
-

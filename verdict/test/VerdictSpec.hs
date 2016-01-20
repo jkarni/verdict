@@ -17,7 +17,6 @@ spec = describe "Verdict" $ do
     lengthSpec
     multipleOfSpec
     genericSpec
-    readSpec
 
 maximumSpec :: Spec
 maximumSpec = describe "Maximum" $ do
@@ -107,41 +106,21 @@ genericSpec = describe "Generic instance" $ do
   context "Product types" $ do
 
     it "validates each field" $ do
-      let p1 = Person { name = unsafeValidated (replicate 20 'a')
-                      , age  = unsafeValidated 5
-                      }
-          p2 = Person { name = unsafeValidated (replicate 5 'a')
-                      , age  = unsafeValidated 20
-                      }
-      verdict p1 `shouldBe` Just ((Leaf "Should be of length 10")
-                            `And` (Leaf "Should be more than 10"))
-      verdict p2 `shouldBe` Just (Leaf "Should be of length 10")
+      verdict badPerson `shouldBe`
+        Just ((Leaf "Should be of length 10") `And` (Leaf "Should be more than 10"))
+
+    it "accepts valid values" $ do
+      verdict goodPerson `shouldBe` Nothing
 
   context "Sum types" $ do
 
     it "validates each field" $ do
-      let e1  = E1 . unsafeValidated $ replicate 20 'a'
-          e2  = E2 $ unsafeValidated 5
-          e1' = E1 . unsafeValidated $ replicate 10 'a'
-          e2' = E2 $ unsafeValidated 20
-      verdict e1 `shouldBe` Just (Leaf "Should be of length 10")
-      verdict e2 `shouldBe` Just (Leaf "Should be more than 10")
-      verdict e1' `shouldBe` Nothing
-      verdict e2' `shouldBe` Nothing
+      verdict badE1 `shouldBe` Just (Leaf "Should be of length 10")
+      verdict badE2 `shouldBe` Just (Leaf "Should be more than 10")
 
-{-
-readSpec :: Spec
-readSpec = describe "Read instance" $ do
+    it "accepts valid values" $ do
+      verdict goodE `shouldBe` Nothing
 
-  context "Product types" $ do
-
-    it "validates each field" $ do
-      evaluate (read "Person {name = \"aaaaaaaaaaaaaaaaaaaa\", age = 5}" :: Person)
-        {-`shouldReturn` Person (unsafeValidated "aaaaaaaaaa") (unsafeValidated 20)-}
-        `shouldThrow` errorCall "Leaf \"Should be of length 10\""
-      {-evaluate (read "Person {name = \"aaaaaaaaaa\", age = 20}" :: Person)-}
-        {-`shouldReturn` Person (unsafeValidated "aaaaaaaaaa") (unsafeValidated 20)-}
--}
 ------------------------------------------------------------------------------
 
 type String10 = Validated (Length 10) String
@@ -151,6 +130,21 @@ data Person = Person { name :: String10
                      , age  :: IntegerMin10
                      } deriving (Generic, Eq, Show, Read, Verdict)
 
+badPerson :: Person
+badPerson = Person { name = unsafeValidated "a" , age = unsafeValidated 3 }
+
+goodPerson :: Person
+goodPerson = Person { name = unsafeValidated (replicate 10 'a') , age = unsafeValidated 20 }
+
 data E = E1 String10
        | E2 IntegerMin10
   deriving (Generic, Eq, Show, Read, Verdict)
+
+badE1 :: E
+badE1 = E1 $ unsafeValidated "a"
+
+badE2 :: E
+badE2 = E2 $ unsafeValidated 4
+
+goodE :: E
+goodE = E1 . unsafeValidated $ replicate 10 'a'

@@ -2,21 +2,21 @@
 {-# OPTIONS_GHC -fno-warn-unused-binds #-}
 module Verdict.JSONSpec (spec) where
 
+import           Control.Lens
 import           Data.Aeson
 import           Data.Proxy
+import           Data.Swagger
 import           GHC.Generics (Generic)
-import           Test.Hspec   (Spec, describe, it, shouldBe, shouldContain, context)
+import           Test.Hspec   (Spec, context, describe, it, shouldBe,
+                               shouldContain)
 import           Verdict
 
 import           Verdict.JSON ()
-import Data.Swagger
-import Control.Lens
 
 spec :: Spec
 spec = describe "Verdict.JSON" $ do
     fromJSONSpec
     genericSpec
-
 
 fromJSONSpec :: Spec
 fromJSONSpec = describe "FromJSON instance" $ do

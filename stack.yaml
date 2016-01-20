@@ -4,9 +4,6 @@ packages:
 - 'verdict-json'
 - 'verdict-quickcheck'
 - 'verdict-db'
-- location:
-    git: https://github.com/soenkehahn/generics-eot.git
-    commit: 7673c3c46a6a640a1ec05a53b549ecd102286c48
 extra-deps:
 - attoparsec-0.13.0.1
 - aeson-0.10.0.0

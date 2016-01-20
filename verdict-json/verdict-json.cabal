@@ -16,7 +16,8 @@ library
   ghc-options:         -Wall
   other-modules:       Verdict.JSON.Class
                      , Verdict.JSON.Types
-  default-extensions:  DeriveFunctor
+  default-extensions:  DefaultSignatures
+                     , DeriveFunctor
                      , DeriveGeneric
                      , DeriveDataTypeable
                      , TypeOperators
@@ -33,6 +34,7 @@ library
                      , verdict == 0.0.*
                      , containers
                      , text
+                     , generics-eot
                      , unordered-containers
                      , vector
   hs-source-dirs:      src

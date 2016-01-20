@@ -38,7 +38,12 @@ class HaskVerdict a b where
 -- ** Logical Base Terms {{{
 ------------------------------------------------------------------------------
 instance (HaskVerdict a r, HaskVerdict b r) => HaskVerdict (a :&& b) r where
-    haskVerdict _ x = And <$> haskVerdict pa x <*> haskVerdict pb x
+    haskVerdict _ x =
+      case (haskVerdict pa x, haskVerdict pb x) of
+        (Just ex, Just ey) -> Just (And ex ey)
+        (Just ex, _) -> Just ex
+        (_, Just ey) -> Just ey
+        _ -> Nothing
       where pa = Proxy :: Proxy a
             pb = Proxy :: Proxy b
 

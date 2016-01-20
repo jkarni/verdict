@@ -17,6 +17,7 @@ spec :: Spec
 spec = describe "Verdict.JSON" $ do
     fromJSONSpec
     specSpec
+    genericSpec
 
 
 fromJSONSpec :: Spec
@@ -40,7 +41,14 @@ fromJSONSpec = describe "FromJSON instance" $ do
 
     it "does validation when parsing" $ do
       (decode (encode badPerson) :: Maybe Person) `shouldBe` Nothing
+
+    it "gives a useful error message" $ do
+      let Left e = eitherDecode (encode badPerson) :: Either String Person
+      e `shouldContain` "Should be of length more than 1"
+
+    it "parses valid values" $ do
       (decode (encode goodPerson) :: Maybe Person) `shouldBe` Just goodPerson
+
 
 specSpec :: Spec
 specSpec = describe "AnySchema" $ do
@@ -70,6 +78,18 @@ specSpec = describe "AnySchema" $ do
       HashMap.lookup "maximum" ageO `shouldBe` Just (Number 200)
 
 
+genericSpec :: Spec
+genericSpec = describe "Generic JsonSchema" $ do
+
+  let (Object jspec)        = toJSON $ jsonSchema (Proxy :: Proxy Person')
+      (Just (Object props)) = HashMap.lookup "properties" jspec
+      (Just (Array reqs))   = HashMap.lookup "required" jspec
+      (Just (Object ageO))  = HashMap.lookup "ageG" props
+      (Just (Object nameO)) = HashMap.lookup "nameG" props
+
+  it "lists required properties " $ do
+    toList reqs `shouldContain` [String "nameG"]
+    toList reqs `shouldContain` [String "ageG"]
 
 type EvenInt = Validated (MultipleOf 2) Int
 
@@ -81,6 +101,11 @@ data Person = Person
     , age  :: Age
     } deriving (Eq, Show, Read, Generic, ToJSON, FromJSON)
 
+data Person' = Person'
+    { nameG :: Name
+    , ageG  :: Age
+    } deriving (Eq, Show, Read, Generic, ToJSON, FromJSON, JsonSchema)
+
 badPerson :: Person
 badPerson = Person { name = unsafeValidated "", age = unsafeValidated 250 }
 
@@ -89,11 +114,11 @@ goodPerson = Person { name = unsafeValidated "Kilroy"
                     , age = unsafeValidated 20 }
 
 instance JsonSchema Person where
-    type JsonType Person = ObjectSchema
-    jsonSchema' _ = mempty { properties = Map.fromList
+    jsonSchema _ = ObjectS $ mempty { properties = Map.fromList
                                 [ ("name", (Required, jsonSchema namep))
                                 , ("age" , (Required, jsonSchema agep ))
                                 ]
                           }
       where namep = Proxy :: Proxy Name
             agep  = Proxy :: Proxy Age
+

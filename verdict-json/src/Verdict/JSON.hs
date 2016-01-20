@@ -4,8 +4,6 @@ module Verdict.JSON
     , ObjectSchema(..)
     , AnySchema(..)
     , Required(..)
-    , mkAny
-    , jsonSchema
     ) where
 
 import Data.Aeson

@@ -81,28 +81,31 @@ specSpec = describe "AnySchema" $ do
 genericSpec :: Spec
 genericSpec = describe "Generic JsonSchema" $ do
 
-  let (Object jspec)        = toJSON $ jsonSchema (Proxy :: Proxy Person')
-      (Just (Object props)) = HashMap.lookup "properties" jspec
-      (Just (Array reqs))   = HashMap.lookup "required" jspec
-      (Just (Object ageO))  = HashMap.lookup "ageG" props
-      (Just (Object nameO)) = HashMap.lookup "nameG" props
+  context "ToJSON instance" $ do
 
-  it "lists required properties " $ do
-    toList reqs `shouldContain` [String "nameG"]
-    toList reqs `shouldContain` [String "ageG"]
 
-  it "contains the outermost type" $ do
-    HashMap.lookup "type" jspec `shouldBe` Just (String "object")
+    let (Object jspec)        = toJSON $ jsonSchema (Proxy :: Proxy Person')
+        (Just (Object props)) = HashMap.lookup "properties" jspec
+        (Just (Array reqs))   = HashMap.lookup "required" jspec
+        (Just (Object ageO))  = HashMap.lookup "ageG" props
+        (Just (Object nameO)) = HashMap.lookup "nameG" props
 
-  it "contains the nested types" $ do
-    HashMap.lookup "type" nameO `shouldBe` Just (String "string")
-    HashMap.lookup "type" ageO  `shouldBe` Just (String "number")
+    it "lists required properties " $ do
+      toList reqs `shouldContain` [String "nameG"]
+      toList reqs `shouldContain` [String "ageG"]
 
-  it "contains the nested constraints" $ do
-    HashMap.lookup "minLength" nameO `shouldBe` Just (Number 1)
-    HashMap.lookup "maxLength" nameO `shouldBe` Just (Number 100)
-    HashMap.lookup "minimum" ageO `shouldBe` Just (Number 0)
-    HashMap.lookup "maximum" ageO `shouldBe` Just (Number 200)
+    it "contains the outermost type" $ do
+      HashMap.lookup "type" jspec `shouldBe` Just (String "object")
+
+    it "contains the nested types" $ do
+      HashMap.lookup "type" nameO `shouldBe` Just (String "string")
+      HashMap.lookup "type" ageO  `shouldBe` Just (String "number")
+
+    it "contains the nested constraints" $ do
+      HashMap.lookup "minLength" nameO `shouldBe` Just (Number 1)
+      HashMap.lookup "maxLength" nameO `shouldBe` Just (Number 100)
+      HashMap.lookup "minimum" ageO `shouldBe` Just (Number 0)
+      HashMap.lookup "maximum" ageO `shouldBe` Just (Number 200)
 
 type EvenInt = Validated (MultipleOf 2) Int
 

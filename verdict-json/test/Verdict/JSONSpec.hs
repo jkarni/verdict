@@ -91,6 +91,19 @@ genericSpec = describe "Generic JsonSchema" $ do
     toList reqs `shouldContain` [String "nameG"]
     toList reqs `shouldContain` [String "ageG"]
 
+  it "contains the outermost type" $ do
+    HashMap.lookup "type" jspec `shouldBe` Just (String "object")
+
+  it "contains the nested types" $ do
+    HashMap.lookup "type" nameO `shouldBe` Just (String "string")
+    HashMap.lookup "type" ageO  `shouldBe` Just (String "number")
+
+  it "contains the nested constraints" $ do
+    HashMap.lookup "minLength" nameO `shouldBe` Just (Number 1)
+    HashMap.lookup "maxLength" nameO `shouldBe` Just (Number 100)
+    HashMap.lookup "minimum" ageO `shouldBe` Just (Number 0)
+    HashMap.lookup "maximum" ageO `shouldBe` Just (Number 200)
+
 type EvenInt = Validated (MultipleOf 2) Int
 
 type Name  = Validated (MinLength 1 :&& MaxLength 100) String

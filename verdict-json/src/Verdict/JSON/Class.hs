@@ -10,6 +10,7 @@ import qualified Data.Map as Map
 import Generics.Eot
 import qualified Data.Text as Text
 
+import Debug.Trace
 
 ------------------------------------------------------------------------------
 -- * JsonSchema
@@ -57,7 +58,7 @@ class GJsonSchema eot where
                 -> ObjectSchema
 
 instance GJsonSchema this => GJsonSchema (Either this Void) where
-    gjsonSchema _ ([x:_], o) = gjsonSchema (Proxy :: Proxy this) ([[x]], o)
+    gjsonSchema _ ([xs], o) = gjsonSchema (Proxy :: Proxy this) ([xs], o)
 
 instance (JsonSchema x, GJsonSchema xs) => GJsonSchema (x, xs) where
     gjsonSchema _ ([n:ns], o) = gjsonSchema ps ([ns], o')
@@ -70,7 +71,7 @@ instance (JsonSchema x, GJsonSchema xs) => GJsonSchema (x, xs) where
     gjsonSchema _ x             = error "impossible (hopefully)"
 
 instance GJsonSchema () where
-    gjsonSchema _ (_, o) = o
+    gjsonSchema _ ([[]], o) = o
 
 instance GJsonSchema Void where
     gjsonSchema _ _ = error "impossible"

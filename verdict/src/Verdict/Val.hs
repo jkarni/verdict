@@ -22,7 +22,7 @@ import           Verdict.Types
 -- | A generalization of smart constructors with opaque types.
 -- Construct a @Validated@ with 'validate'.
 newtype Validated constraint a = Validated { getVal :: a }
-    deriving (Show, Eq, Ord)
+    deriving (Eq, Ord)
 
 -- * Validated ()
 
@@ -73,6 +73,10 @@ instance Foldable (Validated ()) where
 instance (HaskVerdict c v, Read v) => Read (Validated c v) where
     readPrec = force . validate <$> readPrec
       where force = either (error . show) id
+
+instance Show v => Show (Validated c v) where
+    show        (Validated v) = show v
+    showsPrec i (Validated v) = showsPrec i v
 
 instance (HaskVerdict c v, IsString v) => IsString (Validated c v) where
     fromString = force . validate . fromString

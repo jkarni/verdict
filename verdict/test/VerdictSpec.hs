@@ -1,5 +1,8 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE OverloadedStrings #-}
 module VerdictSpec (spec) where
 
+import Control.Exception
 import Data.Either
 import Test.Hspec
 import Verdict
@@ -94,3 +97,5 @@ multipleOfSpec = describe "MultipleOf" $ do
   it "accepts multiples" $ do
     (validate 4 :: Either ErrorTree (Validated (MultipleOf 2) Integer))
         `shouldSatisfy` isRight
+
+

@@ -2,66 +2,67 @@
 {-# OPTIONS_GHC -fno-warn-unused-binds #-}
 module Verdict.JSONSpec (spec) where
 
+import           Control.Lens
 import           Data.Aeson
-import           Data.Foldable (toList)
-import qualified Data.Map     as Map
-import qualified Data.HashMap.Strict as HashMap
 import           Data.Proxy
-import           Data.Vector  (fromList)
+import           Data.Swagger
 import           GHC.Generics (Generic)
-import           Test.Hspec   (Spec, describe, it, shouldBe, shouldContain, context)
+import           Test.Hspec   (Spec, context, describe, it, shouldBe,
+                               shouldContain)
 import           Verdict
 
-import           Verdict.JSON
+import           Verdict.JSON ()
 
 spec :: Spec
 spec = describe "Verdict.JSON" $ do
     fromJSONSpec
-    specSpec
-
+    genericSpec
 
 fromJSONSpec :: Spec
 fromJSONSpec = describe "FromJSON instance" $ do
 
-  it "does validation when parsing" $ do
-    (decode "5" :: Maybe EvenInt) `shouldBe` Nothing
+  context "Validated" $ do
 
-  it "gives a useful error message" $ do
-    let Left e = eitherDecode "5" :: Either String EvenInt
-    e `shouldContain` "Not a multiple of 2"
+    it "does validation when parsing" $ do
+      (decode "5" :: Maybe EvenInt) `shouldBe` Nothing
+      (decode "4" :: Maybe EvenInt) `shouldBe` Just (unsafeValidated 4)
 
-  it "parses valid values" $ do
-    let (Right expected) = validate 4
-    (decode "4" :: Maybe EvenInt) `shouldBe` Just expected
+    it "gives a useful error message" $ do
+      let Left e = eitherDecode "5" :: Either String EvenInt
+      e `shouldContain` "Not a multiple of 2"
 
-specSpec :: Spec
-specSpec = describe "AnySchema" $ do
+    it "parses valid values" $ do
+      let (Right expected) = validate 4
+      (decode "4" :: Maybe EvenInt) `shouldBe` Just expected
 
-  context "ToJSON instance" $ do
-    let (Object jspec)        = toJSON $ jsonSchema (Proxy :: Proxy Person)
-        (Just (Object props)) = HashMap.lookup "properties" jspec
-        (Just (Array reqs))   = HashMap.lookup "required" jspec
-        (Just (Object ageO))  = HashMap.lookup "age" props
-        (Just (Object nameO)) = HashMap.lookup "name" props
+  context "Generic" $ do
 
-    it "lists required properties " $ do
-      toList reqs `shouldContain` [String "name"]
-      toList reqs `shouldContain` [String "age"]
+    it "does validation when parsing" $ do
+      (decode (encode badPerson) :: Maybe Person) `shouldBe` Nothing
 
-    it "contains the outermost type" $ do
-      HashMap.lookup "type" jspec `shouldBe` Just (String "object")
+    it "gives a useful error message" $ do
+      let Left e = eitherDecode (encode badPerson) :: Either String Person
+      e `shouldContain` "Should be of length more than 1"
 
-    it "contains the nested types" $ do
-      HashMap.lookup "type" nameO `shouldBe` Just (String "string")
-      HashMap.lookup "type" ageO  `shouldBe` Just (String "number")
-
-    it "contains the nested constraints" $ do
-      HashMap.lookup "minLength" nameO `shouldBe` Just (Number 1)
-      HashMap.lookup "maxLength" nameO `shouldBe` Just (Number 100)
-      HashMap.lookup "minimum" ageO `shouldBe` Just (Number 0)
-      HashMap.lookup "maximum" ageO `shouldBe` Just (Number 200)
+    it "parses valid values" $ do
+      (decode (encode goodPerson) :: Maybe Person) `shouldBe` Just goodPerson
 
 
+genericSpec :: Spec
+genericSpec = describe "Generic ToSchema" $ do
+
+  let jspec = toSchema (Proxy :: Proxy Person)
+
+  it "has the required properties list" $ do
+    (jspec ^. schemaRequired) `shouldBe` ["name", "age"]
+
+  it "has the nested properties" $ do
+    let Just (Inline i1) = jspec ^. schemaProperties . at "age"
+    let Just (Inline i2) = jspec ^. schemaProperties . at "name"
+    (i1 ^. schemaMaximum) `shouldBe` Just 200.0
+    (i1 ^. schemaMinimum) `shouldBe` Just 0.0
+    (i2 ^. schemaMinLength) `shouldBe` Just 1
+    (i2 ^. schemaMaxLength) `shouldBe` Just 100
 
 type EvenInt = Validated (MultipleOf 2) Int
 
@@ -71,14 +72,11 @@ type Age   = Validated (Minimum 0 :&& Maximum 200) Integer
 data Person = Person
     { name :: Name
     , age  :: Age
-    } deriving (Eq, Show, Read, Generic, ToJSON)
+    } deriving (Eq, Show, Read, Generic, ToJSON, FromJSON, ToSchema)
 
-instance JsonSchema Person where
-    type JsonType Person = ObjectSchema
-    jsonSchema' _ = mempty { properties = Map.fromList
-                                [ ("name", (Required, jsonSchema namep))
-                                , ("age" , (Required, jsonSchema agep ))
-                                ]
-                          }
-      where namep = Proxy :: Proxy Name
-            agep  = Proxy :: Proxy Age
+badPerson :: Person
+badPerson = Person { name = unsafeValidated "", age = unsafeValidated 250 }
+
+goodPerson :: Person
+goodPerson = Person { name = unsafeValidated "Kilroy"
+                    , age = unsafeValidated 20 }

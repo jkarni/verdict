@@ -18,10 +18,10 @@ library
                      , Verdict.Types
                      , Verdict.Logic
                      , Verdict.Val
-                     , Verdict.Base.Internal.Monoid
   default-extensions:  TypeOperators
                      , MultiParamTypeClasses
                      , DataKinds
+                     , DefaultSignatures
                      , FunctionalDependencies
                      , PolyKinds
                      , ScopedTypeVariables
@@ -49,6 +49,7 @@ test-suite spec
   main-is:             Spec.hs
   other-modules:       VerdictSpec
   default-extensions:  DeriveFunctor
+                     , DeriveGeneric
                      , TypeOperators
                      , MultiParamTypeClasses
                      , DataKinds

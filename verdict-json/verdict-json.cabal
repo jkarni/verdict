@@ -10,13 +10,14 @@ maintainer:          jkarni@gmail.com
 copyright:           (c) Julian K. Arni
 build-type:          Simple
 cabal-version:       >=1.10
+extra-source-files:  include/*.h
 
 library
   exposed-modules:     Verdict.JSON
   ghc-options:         -Wall
-  other-modules:       Verdict.JSON.Class
-                     , Verdict.JSON.Types
-  default-extensions:  DeriveFunctor
+  other-modules:       Verdict.JSON.Internal
+  default-extensions:  DefaultSignatures
+                     , DeriveFunctor
                      , DeriveGeneric
                      , DeriveDataTypeable
                      , TypeOperators
@@ -31,12 +32,11 @@ library
   build-depends:       base >=4.8 && <4.9
                      , aeson
                      , verdict == 0.0.*
-                     , containers
-                     , text
-                     , unordered-containers
-                     , vector
+                     , swagger2
+                     , lens
   hs-source-dirs:      src
   default-language:    Haskell2010
+  include-dirs:        include
 
 
 test-suite spec
@@ -60,9 +60,8 @@ test-suite spec
                      , TypeFamilies
   build-depends:       base == 4.*
                      , aeson >= 0.10
-                     , containers
-                     , unordered-containers
-                     , vector
+                     , swagger2
+                     , lens
                      , verdict
                      , verdict-json
                      , hspec == 2.*

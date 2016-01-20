@@ -58,15 +58,11 @@ genericSpec = describe "Generic ToSchema" $ do
 
   it "has the nested properties" $ do
     let Just (Inline i1) = jspec ^. schemaProperties . at "age"
-    (i1 ^. schemaParamSchema . paramSchemaMaximum)
-      `shouldBe` Just 200.0
-    (i1 ^. schemaParamSchema . paramSchemaMinimum)
-      `shouldBe` Just 0.0
     let Just (Inline i2) = jspec ^. schemaProperties . at "name"
-    (i2 ^. schemaParamSchema . paramSchemaMinLength)
-      `shouldBe` Just 1
-    (i2 ^. schemaParamSchema . paramSchemaMaxLength)
-      `shouldBe` Just 100
+    (i1 ^. schemaMaximum) `shouldBe` Just 200.0
+    (i1 ^. schemaMinimum) `shouldBe` Just 0.0
+    (i2 ^. schemaMinLength) `shouldBe` Just 1
+    (i2 ^. schemaMaxLength) `shouldBe` Just 100
 
 type EvenInt = Validated (MultipleOf 2) Int
 

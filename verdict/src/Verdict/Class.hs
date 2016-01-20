@@ -9,25 +9,6 @@ import           GHC.Generics
 import           GHC.TypeLits
 import           Verdict.Types
 
-class Verdict v where
-    verdict :: v -> Maybe ErrorTree
-    default verdict :: (GVerdict (Rep v), Generic v) => v -> Maybe ErrorTree
-    verdict = defaultVerdict
-
-
-instance Verdict Int where
-    verdict = const Nothing
-instance Verdict Double where
-    verdict = const Nothing
-instance Verdict Float where
-    verdict = const Nothing
-instance Verdict Char where
-    verdict = const Nothing
-instance Verdict Bool where
-    verdict = const Nothing
-instance Verdict () where
-    verdict = const Nothing
-
 ------------------------------------------------------------------------------
 -- * HaskVerdict {{{
 ------------------------------------------------------------------------------
@@ -108,32 +89,6 @@ check :: (x -> Bool) -> err -> x -> Maybe (ErrorTree' err)
 check pred' err x = guard (not $ pred' x) >> pure (Leaf err)
 
 -- }}}
--- }}}
-------------------------------------------------------------------------------
--- * GVerdict {{{
-
-class GVerdict (v :: * -> *) where
-    gverdict :: v x -> Maybe ErrorTree
-
-instance (GVerdict a, GVerdict b) => GVerdict (a :*: b) where
-    gverdict (a :*: b) = case gverdict a of   --TODO: keep loc
-      Nothing -> gverdict b
-      Just ea -> case gverdict b of
-        Nothing -> Just ea
-        Just eb -> Just (ea `And` eb)
-
-instance (GVerdict a, GVerdict b) => GVerdict (a :+: b) where
-    gverdict (L1 a) = gverdict a -- TODO: keep loc
-    gverdict (R1 b) = gverdict b -- TODO: keep loc
-
-instance GVerdict a => GVerdict (M1 i c a) where
-    gverdict (M1 a) = gverdict a -- TODO: keep loc
-
-instance Verdict a => GVerdict (K1 i a) where
-    gverdict (K1 a) = verdict a -- TODO: keep loc
-
-defaultVerdict :: (Generic v, GVerdict (Rep v)) => v -> Maybe ErrorTree
-defaultVerdict = gverdict . from
 -- }}}
 ------------------------------------------------------------------------------
 -- Known Val

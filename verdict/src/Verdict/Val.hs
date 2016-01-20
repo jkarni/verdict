@@ -82,9 +82,6 @@ instance (HaskVerdict c v, IsString v) => IsString (Validated c v) where
     fromString = force . validate . fromString
       where force = either (error . show) id
 
-instance HaskVerdict c a => Verdict (Validated c a) where
-    verdict (Validated a) = haskVerdict (Proxy :: Proxy c) a
-
 -- | Constructs a @Validated c a@ from an @a@ if @a@ matches the constraints;
 -- throws an error with a description of precise constraints not satisfied
 -- otherwise.

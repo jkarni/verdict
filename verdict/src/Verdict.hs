@@ -32,7 +32,6 @@ module Verdict
 
     -- * Errors
     , ErrorTree
-    , ErrorTree'(..)
     , Failure(..)
     , ApplicativeError(..)
     ) where

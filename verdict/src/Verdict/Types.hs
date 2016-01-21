@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveFunctor #-}
 module Verdict.Types where
 
+import Data.Algebra.Boolean.FreeBoolean
 import qualified Data.Text as Text
 
 ------------------------------------------------------------------------------
@@ -36,16 +37,19 @@ data HasElem a
 -- * Other Types
 ------------------------------------------------------------------------------
 
--- | Error representation
-data ErrorTree' e
-  = Leaf e
-  | Or  (ErrorTree' e) (ErrorTree' e)
-  | And (ErrorTree' e) (ErrorTree' e)
-  | Sum (ErrorTree' e) (ErrorTree' e)
-  deriving (Eq, Show, Functor)
+type ErrorTree = FreeBoolean Text.Text
 
-type ErrorTree = ErrorTree' Text.Text
+-- | Report a simple (non-decomposable) error
+simpleError :: Text.Text -> ErrorTree
+simpleError = FBValue
 
-instance Monoid e => Monoid (ErrorTree' e) where
-    mempty  = Leaf mempty
-    mappend = And
+-- | No error, and nothing to report in negation.
+noError :: ErrorTree
+noError = FBTrue
+
+-- | Error without any information. Prefer 'simpleError'.
+absoluteError :: ErrorTree
+absoluteError = FBFalse
+
+isError :: ErrorTree -> Bool
+isError = not . toBoolWith (const False)

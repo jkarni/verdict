@@ -1,11 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Verdict.Class where
 
-import           Control.Monad
 import           Data.Monoid
 import           Data.Proxy
 import qualified Data.Text     as Text
-import           GHC.Generics
+import qualified Data.Algebra.Boolean as B
 import           GHC.TypeLits
 import           Verdict.Types
 
@@ -13,41 +12,37 @@ import           Verdict.Types
 -- * HaskVerdict {{{
 ------------------------------------------------------------------------------
 class HaskVerdict a b where
-    haskVerdict :: Proxy a -> b -> Maybe ErrorTree
+    haskVerdict :: Proxy a -> b -> ErrorTree
 
 ------------------------------------------------------------------------------
 -- ** Logical Base Terms {{{
 ------------------------------------------------------------------------------
 instance (HaskVerdict a r, HaskVerdict b r) => HaskVerdict (a :&& b) r where
-    haskVerdict _ x =
-      case (haskVerdict pa x, haskVerdict pb x) of
-        (Just ex, Just ey) -> Just (And ex ey)
-        (Just ex, _) -> Just ex
-        (_, Just ey) -> Just ey
-        _ -> Nothing
+    haskVerdict _ x = haskVerdict pa x B.&& haskVerdict pb x
       where pa = Proxy :: Proxy a
             pb = Proxy :: Proxy b
 
 instance (HaskVerdict a r, HaskVerdict b r) => HaskVerdict (a :|| b) r where
-    haskVerdict _ x = Or <$> haskVerdict pa x <*> haskVerdict pb x
+    haskVerdict _ x = haskVerdict pa x B.|| haskVerdict pb x
       where pa = Proxy :: Proxy a
             pb = Proxy :: Proxy b
 
 instance (HaskVerdict c a) => HaskVerdict (Not c) a where
-    haskVerdict _ x = case haskVerdict p x of
-        Just _ -> Nothing
-        Nothing -> Just (Leaf "this still needs to be figured out")
+    haskVerdict _ x = B.not $ haskVerdict p x
       where p = Proxy :: Proxy c
 
 instance HaskVerdict 'True a where
-    haskVerdict _ _ = Nothing
+    haskVerdict _ _ = noError
+
+instance HaskVerdict 'False a where
+    haskVerdict _ _ = noError
 
 -- }}}
 ------------------------------------------------------------------------------
 -- ** Other Base Terms {{{
 ------------------------------------------------------------------------------
 instance HaskVerdict () a where
-    haskVerdict _ = const Nothing
+    haskVerdict _ _ = noError
 
 instance (Ord b, Show b, KnownVal a b) => HaskVerdict (Maximum a) b where
     haskVerdict _ = check (<= p) ("Should be less than " <> showT p)
@@ -85,8 +80,8 @@ instance (KnownNat n, Integral a) => HaskVerdict (MultipleOf n) a where
 showT :: Show a => a -> Text.Text
 showT = Text.pack . show
 
-check :: (x -> Bool) -> err -> x -> Maybe (ErrorTree' err)
-check pred' err x = guard (not $ pred' x) >> pure (Leaf err)
+check :: (x -> Bool) -> Text.Text -> x -> ErrorTree
+check pred' err x = if pred' x then noError else simpleError err
 
 -- }}}
 -- }}}

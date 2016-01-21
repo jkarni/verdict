@@ -4,11 +4,11 @@ module Verdict.Val where
 
 import           Control.Monad.Fix
 import           Control.Monad.Zip
-import           Data.Coerce     (Coercible, coerce)
-import           Data.Either (isRight)
+import           Data.Coerce       (Coercible, coerce)
+import           Data.Either       (isRight)
 import           Data.Foldable
 import           Data.Proxy
-import           Data.String     (IsString (..))
+import           Data.String       (IsString (..))
 import           Text.Read
 
 import           Verdict.Class
@@ -87,9 +87,8 @@ instance (HaskVerdict c v, IsString v) => IsString (Validated c v) where
 -- otherwise.
 validate :: forall c a m . (HaskVerdict c a, ApplicativeError ErrorTree m)
     => a -> m (Validated c a)
-validate a = case haskVerdict (Proxy :: Proxy c) a of
-    Nothing -> pure $ Validated a
-    Just err -> throwError err
+validate a = let e = haskVerdict (Proxy :: Proxy c) a
+             in if isError e then throwError e else pure $ Validated a
 
 -- | Coerce a 'Validated' to another set of constraints. This is safe with
 -- respect to memory corruption, but loses the guarantee that the values
@@ -109,9 +108,9 @@ unsafeValidated = Validated
 protect :: ( ApplicativeError (String, ErrorTree) m
            , HaskVerdict c a
            ) => Proxy c -> String -> (a -> b) -> a -> m b
-protect p name fn a = case haskVerdict p a of
-    Nothing -> pure $ fn a
-    Just e  -> throwError (name, e)
+protect p name fn a = let e = haskVerdict p a
+                      in if isError e then throwError (name, e)
+                                      else pure $ fn a
 
 -- | Checks a non-'Validated' value against a set of constraints given by a
 -- 'Proxy'.

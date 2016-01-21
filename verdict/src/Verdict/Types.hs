@@ -1,8 +1,12 @@
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Verdict.Types where
 
 import Data.Algebra.Boolean.FreeBoolean
-import qualified Data.Text as Text
+import Data.Algebra.Boolean.NormalForm
+import Data.Algebra.Boolean.DNF
+import qualified Data.Text.Lazy as Text
+import qualified Text.PrettyPrint.Leijen.Text as PP
 
 ------------------------------------------------------------------------------
 -- * Logical Base Terms
@@ -53,3 +57,12 @@ absoluteError = FBFalse
 
 isError :: ErrorTree -> Bool
 isError = not . toBoolWith (const False)
+
+prettyError' :: DNF Text.Text -> PP.Doc
+prettyError' e = outer $ inner <$> toDoubleList e
+  where
+    inner = foldr (\new rest -> PP.text new PP.<> PP.text " AND " PP.<> rest) mempty
+    outer = foldr (\new rest -> new PP.<> PP.text " OR " PP.<> rest) mempty
+
+prettyError :: ErrorTree -> PP.Doc
+prettyError e = prettyError' (fromFreeBoolean e :: DNF Text.Text)

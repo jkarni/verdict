@@ -81,7 +81,8 @@ showT :: Show a => a -> Text.Text
 showT = Text.pack . show
 
 check :: (x -> Bool) -> Text.Text -> x -> ErrorTree
-check pred' err x = if pred' x then noError else simpleError err
+check pred' err x = let e = simpleError err
+                    in if pred' x then B.not e else e
 
 -- }}}
 -- }}}

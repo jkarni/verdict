@@ -38,6 +38,7 @@ library
                      , text
                      , cond == 0.4.*
                      , boolean-normal-forms == 0.0.0.*
+                     , wl-pprint-text == 1.*
   hs-source-dirs:      src
   ghc-options:         -Wall
   default-language:    Haskell2010

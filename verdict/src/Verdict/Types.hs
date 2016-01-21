@@ -3,6 +3,7 @@
 module Verdict.Types where
 
 import Data.Algebra.Boolean.FreeBoolean
+import Data.Algebra.Boolean.Negable
 import Data.Algebra.Boolean.NormalForm
 import Data.Algebra.Boolean.DNF
 import qualified Data.Text.Lazy as Text
@@ -38,14 +39,31 @@ data MultipleOf a
 data HasElem a
 
 ------------------------------------------------------------------------------
--- * Other Types
+-- * Error Types
 ------------------------------------------------------------------------------
 
-type ErrorTree = FreeBoolean Text.Text
+-- | The error message. Should include both the original and negated forms.
+-- E.g.:
+--
+-- > notPrimeErrorMsg :: ErrorMsg
+-- > notPrimeErrorMsg = ErrorMsg
+--   { origError = "This number should be prime"
+--   , negatedError = "This number should not be prime"
+--   }
+data ErrorMsg = ErrorMsg
+  { origError    :: Text.Text -- ^ The error message in non-negated form
+  , negatedError :: Text.Text -- ^ The negated error message
+  } deriving (Eq, Show, Read, Ord)
+
+negableErrorMsgToText :: Neg ErrorMsg -> Text.Text
+negableErrorMsgToText (Pos a) = origError a
+negableErrorMsgToText (Neg a) = negatedError a
+
+type ErrorTree = FreeBoolean (Neg ErrorMsg)
 
 -- | Report a simple (non-decomposable) error
-simpleError :: Text.Text -> ErrorTree
-simpleError = FBValue
+simpleError :: ErrorMsg -> ErrorTree
+simpleError = NotNot . FBValue
 
 -- | No error, and nothing to report in negation.
 noError :: ErrorTree
@@ -58,7 +76,7 @@ absoluteError = FBFalse
 isError :: ErrorTree -> Bool
 isError = not . toBoolWith (const False)
 
-prettyError' :: DNF Text.Text -> PP.Doc
+prettyError' :: DNF (Neg ErrorMsg) -> PP.Doc
 prettyError' e = outer $ inner <$> toDoubleList e
   where
     inner = foldr (\new rest -> PP.text new PP.<> PP.text " AND " PP.<> rest) mempty

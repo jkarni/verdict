@@ -4,6 +4,7 @@ packages:
 - 'verdict-json'
 - 'verdict-quickcheck'
 - 'verdict-db'
+- 'verdict-html'
 - location:
     git: https://github.com/jkarni/boolean-normal-forms.git
     commit: 12077171497725fe84e386e209cbfaede89f02d9
@@ -13,5 +14,6 @@ extra-deps:
 - markdown-unlit-0.2.0.1
 - swagger2-1.2.1
 - boolean-normal-forms-0.0.0.1
+- http-api-data-0.2.2
 flags: {}
 extra-package-dbs: []

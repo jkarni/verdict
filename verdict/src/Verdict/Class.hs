@@ -44,6 +44,10 @@ instance HaskVerdict 'False a where
 instance HaskVerdict () a where
     haskVerdict _ _ = noError
 
+instance (Eq a, Show a, KnownVal v a) => HaskVerdict (Equals v) a where
+    haskVerdict _ = check (== p) ("Show be equal to " <> showT p)
+      where p = knownVal (Proxy :: Proxy v)
+
 instance (Ord b, Show b, KnownVal a b) => HaskVerdict (Maximum a) b where
     haskVerdict _ = check (<= p) ("Should be less than " <> showT p)
       where p = knownVal (Proxy :: Proxy a)

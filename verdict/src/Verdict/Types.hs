@@ -30,6 +30,7 @@ data MaxLength a
 data MinLength a
 data Length a
 data MultipleOf a
+data Equals a
 
 data HasElem a
 

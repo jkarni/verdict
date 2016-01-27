@@ -76,3 +76,24 @@ executable tutorial
                      , text
                      , markdown-unlit
   default-language:    Haskell2010
+
+executable infer
+  main-is:             Infer.lhs
+  ghc-options:         -Wall
+  hs-source-dirs:      examples
+  build-depends:       base >=4.7 && <4.9
+                     , verdict
+                     , text
+                     , markdown-unlit
+  default-language:    Haskell2010
+  default-extensions:  DeriveFunctor
+                     , DeriveGeneric
+                     , TypeOperators
+                     , MultiParamTypeClasses
+                     , DataKinds
+                     , FunctionalDependencies
+                     , PolyKinds
+                     , ScopedTypeVariables
+                     , FlexibleInstances
+                     , FlexibleContexts
+                     , TypeFamilies

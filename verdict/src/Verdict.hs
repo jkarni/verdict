@@ -22,6 +22,7 @@ module Verdict
     , (:&&)
     , (:||)
     , Not
+    , Equals
     , Minimum
     , Maximum
     , MaxLength

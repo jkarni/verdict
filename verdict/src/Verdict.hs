@@ -15,7 +15,6 @@ module Verdict
     , HaskVerdict(..)
     , Implies
     , Implies'
-    , KnownVal(..)
     , (|.)
 
     -- * Verdict Terms
@@ -35,6 +34,10 @@ module Verdict
     , ErrorTree
     , Failure(..)
     , ApplicativeError(..)
+
+    -- * Type-level naturals
+    , Z
+    , S
     ) where
 
 import           Verdict.Class

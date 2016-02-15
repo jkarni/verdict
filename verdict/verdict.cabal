@@ -38,6 +38,7 @@ library
                      , text
                      , cond == 0.4.*
                      , boolean-normal-forms == 0.0.0.*
+                     , reflection == 2.*
   hs-source-dirs:      src
   ghc-options:         -Wall
   default-language:    Haskell2010
@@ -69,7 +70,7 @@ test-suite spec
 
 executable tutorial
   main-is:             Tutorial.lhs
-  ghc-options:         -Wall -pgmL markdown-unlit
+  ghc-options:         -pgmL markdown-unlit
   hs-source-dirs:      examples
   build-depends:       base >=4.7 && <4.9
                      , verdict
@@ -79,12 +80,13 @@ executable tutorial
 
 executable infer
   main-is:             Infer.lhs
-  ghc-options:         -Wall
+  ghc-options:         -Wall -fno-warn-type-defaults
   hs-source-dirs:      examples
   build-depends:       base >=4.7 && <4.9
                      , verdict
                      , text
                      , markdown-unlit
+                     , reflection == 2.*
   default-language:    Haskell2010
   default-extensions:  DeriveFunctor
                      , DeriveGeneric

@@ -3,6 +3,8 @@ module Verdict.Types where
 
 import Data.Algebra.Boolean.FreeBoolean
 import qualified Data.Text as Text
+import Data.Reflection hiding (Z)
+import Data.Proxy
 
 ------------------------------------------------------------------------------
 -- * Logical Base Terms
@@ -37,6 +39,14 @@ data HasElem a
 ------------------------------------------------------------------------------
 -- * Other Types
 ------------------------------------------------------------------------------
+data S n
+data Z
+
+instance Reifies Z Int where
+  reflect _ = 0
+
+instance (Reifies n Int) => Reifies (S n) Int where
+  reflect _ = (+ 1) $ reflect (Proxy :: Proxy n)
 
 type ErrorTree = FreeBoolean Text.Text
 

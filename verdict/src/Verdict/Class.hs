@@ -1,10 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Verdict.Class where
 
+import qualified Data.Algebra.Boolean as B
 import           Data.Monoid
 import           Data.Proxy
-import qualified Data.Text     as Text
-import qualified Data.Algebra.Boolean as B
+import           Data.Reflection
+import qualified Data.Text            as Text
 import           GHC.TypeLits
 import           Verdict.Types
 
@@ -44,17 +45,17 @@ instance HaskVerdict 'False a where
 instance HaskVerdict () a where
     haskVerdict _ _ = noError
 
-instance (Eq a, Show a, KnownVal v a) => HaskVerdict (Equals v) a where
+instance (Eq a, Show a, Reifies v a) => HaskVerdict (Equals v) a where
     haskVerdict _ = check (== p) ("Show be equal to " <> showT p)
-      where p = knownVal (Proxy :: Proxy v)
+      where p = reflect (Proxy :: Proxy v)
 
-instance (Ord b, Show b, KnownVal a b) => HaskVerdict (Maximum a) b where
+instance (Ord b, Show b, Reifies a b) => HaskVerdict (Maximum a) b where
     haskVerdict _ = check (<= p) ("Should be less than " <> showT p)
-      where p = knownVal (Proxy :: Proxy a)
+      where p = reflect (Proxy :: Proxy a)
 
-instance (Ord b, Show b, KnownVal a b) => HaskVerdict (Minimum a) b where
+instance (Ord b, Show b, Reifies a b) => HaskVerdict (Minimum a) b where
     haskVerdict _ = check (>= p) ("Should be more than " <> showT p)
-      where p = knownVal (Proxy :: Proxy a)
+      where p = reflect (Proxy :: Proxy a)
 
 instance (Foldable f, Show (f b), KnownNat a)
        => HaskVerdict (MaxLength a) (f b) where
@@ -66,16 +67,16 @@ instance (Foldable f, Show (f b), KnownNat a)
        => HaskVerdict (MinLength a) (f b) where
     haskVerdict _ = check ((>= p) . length)
                           ("Should be of length more than " <> showT p)
-      where p = fromInteger $ knownVal (Proxy :: Proxy a)
+      where p = fromInteger $ reflect (Proxy :: Proxy a)
 
 instance (Foldable t, KnownNat a) => HaskVerdict (Length a) (t b) where
     haskVerdict _ = check ((== p) . length) ("Should be of length " <> showT p)
       where p = fromInteger $ natVal (Proxy :: Proxy a)
 
-instance (Foldable t, Show b, Eq b, KnownVal a b)
+instance (Foldable t, Show b, Eq b, Reifies a b)
     => HaskVerdict (HasElem a) (t b) where
     haskVerdict _ = check (elem p) ("Should contain " <> showT p)
-      where p = knownVal (Proxy :: Proxy a)
+      where p = reflect (Proxy :: Proxy a)
 
 instance (KnownNat n, Integral a) => HaskVerdict (MultipleOf n) a where
     haskVerdict _ = check (\x -> (toInteger x `rem` p) == 0) ("Not a multiple of " <> showT p)
@@ -89,10 +90,3 @@ check pred' err x = if pred' x then noError else simpleError err
 
 -- }}}
 -- }}}
-------------------------------------------------------------------------------
--- Known Val
-class KnownVal a b | a -> b where
-    knownVal :: Proxy a -> b
-
-instance KnownNat n => KnownVal n Integer where
-    knownVal = natVal

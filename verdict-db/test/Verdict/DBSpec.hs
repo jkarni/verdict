@@ -25,8 +25,3 @@ querySpec = describe "query" $ do
         r2 = query eg
     r1 `shouldBe` [unsafeValidated [2..6], unsafeValidated [1..5]]
     r2 `shouldBe` [unsafeValidated [1..10]]
-
-  it "allows 'joins'" $ do
-    let r1 :: [Joined [Int] [Int]]
-        r1 = [Joined (unsafeValidated [2..6]) (unsafeValidated [2..6])]
-    crossJoin eg eg2 `shouldBe` r1

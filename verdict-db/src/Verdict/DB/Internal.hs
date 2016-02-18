@@ -67,7 +67,6 @@ data DB cs val = DB
     , dbIxs  :: HList cs val
     }
 
-
 -- Gets the first occurrence of a 'c'-index in the HList.
 class HOccurs c cs v where
     hOccurrence :: Proxy c -> HList cs v -> Index c v
@@ -87,3 +86,41 @@ instance (DBVerdict c v, DBVerdict cs v) => DB (c ': cs) v where
     empty = empty : empty
     insert new ixs = insert new <$> ixs
 -}
+
+-- * Joins
+class RemoveFirst a b | a -> b where
+  removeFirst :: a -> b
+
+instance RemoveFirst (DB (x ': xs) v) (DB xs v) where
+  removeFirst (DB d ixs) = DB d (removeFirst ixs)
+
+instance RemoveFirst (HList (x ': xs) v) (HList xs v) where
+  removeFirst (HCons x xs) = xs
+
+
+data Joined a b where
+   Joined :: Validated c a -> Validated c b -> Joined a b
+
+instance (Eq a, Eq b) => Eq (Joined a b) where
+  Joined a1 b1 == Joined a2 b2 = getVal a1 == getVal a2 && getVal b1 == getVal b2
+
+instance (Show a, Show b) => Show (Joined a b) where
+  show (Joined a b) = "Joined " ++ show (getVal a) ++ " " ++ show (getVal b)
+
+class CrossJoin db1 db2 a where
+    crossJoin :: db1 -> db2 -> a
+
+instance (HaskVerdict x a, HaskVerdict x b)
+    => CrossJoin (DB '[x] a) (DB '[x] b) [Joined a b] where
+    crossJoin db1 db2 = [ Joined a b | (a :: Validated x a) <- query db1
+                                , (b :: Validated x b) <- query db2 ]
+
+instance (HaskVerdict x a, HaskVerdict x b)
+    => CrossJoin (DB '[x] a) (DB '[y] b) [Joined a b] where
+    crossJoin _ _ = []
+
+instance (HaskVerdict x a, HaskVerdict x b, CrossJoin (DB xs a) (DB ys b) [Joined a b])
+    => CrossJoin (DB (x ': xs) a) (DB (x ': ys) b) [Joined a b] where
+    crossJoin db1 db2 = [ Joined a b | (a :: Validated x a) <- query db1
+                                , (b :: Validated x b) <- query db2 ]
+                ++ crossJoin (removeFirst db1) (removeFirst db2)

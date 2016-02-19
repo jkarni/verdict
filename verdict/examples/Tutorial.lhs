@@ -31,12 +31,12 @@ makeNonEmptyList x | null x    = Nothing
                    | otherwise = Just (NonEmptyList' x)
 ~~~
 
-Where the `NonEmptyList` constructor is not exported.
+Where the `NonEmptyList'` constructor is not exported.
 
 This works, but it has quite a few downsides. You can no longer derive things
 like `Read` and `FromJSON` without losing the invariants you set up. If you
-have a `NonEmptyList` that is also of maximum length 100, you need to either
-have a newtype to again wrap your `NonEmptyList`, or a newtype that expresses
+have a `NonEmptyList'` that is also of maximum length 100, you need to either
+have a newtype to again wrap your `NonEmptyList'`, or a newtype that expresses
 both those constraints. Either way, all the functions you wrote for
 `NonEmptyList`, and which ideally would work with `NonEmptyMax100List`, won't
 do so (without some newtype unwrapping or coercing).
@@ -112,7 +112,7 @@ type instance Implies' (InCircle cx cy r) (InCircle cx cy r') = r <= r'
 
 ## And opt-in validation capabilities
 
-Sometimes you may not want to or be able to change the types of records. You
+Sometimes you may not want to or are not able to change the types of records. You
 can still validate them:
 
 ~~~ {.haskell}

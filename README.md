@@ -1,6 +1,6 @@
 # Verdict
 
-*Very experimental!*
+*Very experimental!*  An introductory talk [is available here](https://www.youtube.com/watch?v=w9X1I1ySCCM) from BOB 2016 ([slides](https://raw.githubusercontent.com/jkarni/bobkonf/master/presentation.md))
 
 ~~~ {.haskell}
 {-# LANGUAGE DataKinds #-}
